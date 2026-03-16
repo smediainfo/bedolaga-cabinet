@@ -95,6 +95,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
         initTelegramLogin();
       };
       script.onerror = () => {
+        setScriptLoaded(true);
         setOidcError(t('auth.loginFailed'));
       };
       document.head.appendChild(script);
@@ -176,10 +177,11 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
             onClick={() => {
               setOidcError('');
               setOidcLoading(true);
-              if (window.Telegram?.Login) {
+              if (window.Telegram?.Login?.open) {
                 window.Telegram.Login.open();
               } else {
                 setOidcLoading(false);
+                setOidcError(t('auth.loginFailed'));
               }
             }}
             disabled={oidcLoading || !scriptLoaded}
