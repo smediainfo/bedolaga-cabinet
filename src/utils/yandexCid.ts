@@ -33,6 +33,13 @@ async function fetchCounterId(): Promise<string | null> {
 export async function getYandexCid(timeoutMs = 1500): Promise<string | null> {
   if (cachedCid) return cachedCid;
 
+  // Check localStorage first (set by useAnalyticsCounters on page load)
+  const stored = localStorage.getItem('yandex_cid');
+  if (stored) {
+    cachedCid = stored;
+    return stored;
+  }
+
   const counterId = await fetchCounterId();
   if (!counterId) return null;
 
