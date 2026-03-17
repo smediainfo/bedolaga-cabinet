@@ -714,8 +714,7 @@ export default function QuickPurchase() {
   const queryClient = useQueryClient();
 
   // Capture Yandex CID for offline conversions
-  const yandexCidRef = useRef<string | null>(null);
-  useEffect(() => { getYandexCid().then(cid => { yandexCidRef.current = cid; }); }, []);
+  const yandexCidRef = useRef<string | null>(getYandexCid());
 
   // Fetch config
   const {
