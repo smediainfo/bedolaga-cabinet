@@ -139,6 +139,7 @@ function GiftToggle({ isGift, onToggle }: { isGift: boolean; onToggle: (v: boole
       >
         {t('landing.forMe', 'For me')}
       </button>
+
       <button
         type="button"
         onClick={() => onToggle(true)}
@@ -150,6 +151,7 @@ function GiftToggle({ isGift, onToggle }: { isGift: boolean; onToggle: (v: boole
       >
         {t('landing.asGift', 'As a gift')}
       </button>
+
     </div>
   );
 }
@@ -416,7 +418,6 @@ function PaymentMethodCard({
           {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
         </div>
       </button>
-
       {/* Sub-options */}
       {isSelected && hasSubOptions && (
         <div className="border-t border-dark-800/30 px-4 pb-4 pt-3">
@@ -596,6 +597,7 @@ function SummaryCard({
           </>
         )}
       </button>
+
 
       {/* Footer */}
       {config.footer_text && (
@@ -912,7 +914,7 @@ export default function QuickPurchase() {
   });
 
   // Submit handler
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit || !slug || isSubmitting) return;
 
     setIsSubmitting(true);
@@ -931,6 +933,7 @@ export default function QuickPurchase() {
       contact_type: detectContactType(contactValue),
       contact_value: contactValue.trim(),
       payment_method: paymentMethod,
+      language: i18n.language,
       is_gift: isGift,
     };
 
@@ -941,6 +944,20 @@ export default function QuickPurchase() {
     }
 
     data.yandex_cid = getYandexCid() || yandexCidRef.current || undefined;
+
+    // Fire analytics event on purchase click
+    try {
+      const { fireAnalyticsEvent } = await import('../hooks/useAnalyticsCounters');
+      fireAnalyticsEvent('purchase_click', {
+        landing: slug,
+        tariff_id: selectedTariffId,
+        period_days: selectedPeriodDays,
+        payment_method: paymentMethod,
+      language: i18n.language,
+        value: (data as any).amount_kopeks ? (data as any).amount_kopeks / 100 : undefined,
+      });
+    } catch { /* silent */ }
+
     purchaseMutation.mutate(data);
   };
 

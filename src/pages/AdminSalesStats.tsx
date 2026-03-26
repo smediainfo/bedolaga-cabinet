@@ -6,6 +6,7 @@ import type { SalesStatsParams } from '../api/adminSalesStats';
 import { salesStatsApi } from '../api/adminSalesStats';
 import { SALES_STATS } from '../constants/salesStats';
 import { useCurrency } from '../hooks/useCurrency';
+import { USER_TIMEZONE } from '../utils/format';
 import { AdminBackButton } from '../components/admin/AdminBackButton';
 import { StatCard } from '../components/stats';
 import {
@@ -35,6 +36,7 @@ export default function AdminSalesStats() {
       days: period.days,
       start_date: period.startDate,
       end_date: period.endDate,
+      tz: USER_TIMEZONE,
     }),
     [period.days, period.startDate, period.endDate],
   );

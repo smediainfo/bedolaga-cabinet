@@ -203,7 +203,9 @@
     "continueWithVk": "通过 VK 继续",
     "oauthError": "授权被拒绝或失败",
     "oauthExpired": "OAuth 会话已过期。请重试。",
-    "disposableEmail": "不允许使用一次性电子邮件地址。请使用永久电子邮件。"
+    "disposableEmail": "不允许使用一次性电子邮件地址。请使用永久电子邮件。",
+    "orSignInWith": "或通过以下方式登录",
+    "orUseBot": "或在应用中打开机器人"
   },
   "emailVerification": {
     "title": "邮箱验证",
@@ -945,7 +947,8 @@
       "auditLog": "审计日志",
       "salesStats": "销售统计",
       "landings": "落地页",
-      "referralNetwork": "推荐网络"
+      "referralNetwork": "推荐网络",
+      "news": "新闻"
     },
     "panel": {
       "title": "管理面板",
@@ -980,7 +983,8 @@
       "auditLogDesc": "查看系统活动和访问历史",
       "salesStatsDesc": "销售分析与趋势",
       "landingsDesc": "快速购买落地页",
-      "referralNetworkDesc": "推荐图表和广告活动可视化"
+      "referralNetworkDesc": "推荐图表和广告活动可视化",
+      "newsDesc": "管理新闻和通知"
     },
     "salesStats": {
       "title": "销售统计",
@@ -1434,7 +1438,9 @@
       "customButtonTypeCallback": "回调",
       "customButtonTypeUrl": "链接",
       "customButtonCallbackPlaceholder": "callback_data（例如 back_to_menu）",
-      "customButtonUrlPlaceholder": "https://example.com"
+      "customButtonUrlPlaceholder": "https://example.com",
+      "messageLimitWithMedia": "with media max 1024",
+      "messageLimitNoMedia": "max 4096"
     },
     "pinnedMessages": {
       "title": "置顶消息",
@@ -1586,6 +1592,13 @@
       "emailAuthDesc": "允许通过邮箱登录",
       "giftEnabled": "赠送订阅",
       "giftEnabledDesc": "允许用户将订阅作为礼物赠送给其他用户",
+      "loginForm": {
+        "title": "登录表单",
+        "description": "配置登录页面各部分的顺序和可见性",
+        "telegram": "Telegram",
+        "oauth": "OAuth",
+        "email": "邮箱"
+      },
       "favoritesEmpty": "暂无收藏",
       "favoritesHint": "点击星标将设置添加到这里",
       "interfaceOptions": "界面选项",
@@ -2473,7 +2486,15 @@
         "noTickets": "该用户没有工单",
         "ticketsCount": "个工单",
         "messagesCount": "条消息",
-        "status": "状态",
+        "status": {
+          "label": "状态",
+          "active": "活跃",
+          "blocked": "已封禁",
+          "deleted": "已删除",
+          "trial": "试用",
+          "expired": "已过期",
+          "disabled": "已禁用"
+        },
         "language": "语言",
         "registration": "注册时间",
         "lastActivity": "最后活跃",
@@ -3926,8 +3947,70 @@
     }
   },
   "legal": {
+    "paymentConsent": "付款即表示您同意",
+    "and": "和",
     "rules": "服务条款",
     "privacy": "隐私政策",
-    "offer": "公开报价"
+    "offer": "公开要约"
+  },
+  "news": {
+    "title": "新闻与更新",
+    "filterAll": "全部",
+    "readMore": "阅读更多",
+    "readTime": "分钟阅读",
+    "loadMore": "加载更多",
+    "noNews": "暂无新闻",
+    "backToHome": "返回",
+    "views": "浏览量",
+    "admin": {
+      "title": "新闻管理",
+      "create": "创建文章",
+      "edit": "编辑",
+      "delete": "删除",
+      "confirmDelete": "删除这篇文章？",
+      "published": "已发布",
+      "draft": "草稿",
+      "featured": "精选",
+      "titleLabel": "标题",
+      "slugLabel": "URL标识",
+      "categoryLabel": "分类",
+      "categoryColorLabel": "分类颜色",
+      "tagLabel": "标签",
+      "excerptLabel": "简短描述",
+      "contentLabel": "内容",
+      "imageLabel": "特色图片",
+      "readTimeLabel": "阅读时间（分钟）",
+      "save": "保存",
+      "saving": "保存中...",
+      "saveError": "保存文章失败，请重试。",
+      "saved": "文章已保存",
+      "deleted": "文章已删除",
+      "selectColor": "选择颜色 {{color}}",
+      "uploading": "上传中...",
+      "dropMedia": "将图片或视频拖到这里",
+      "uploadError": "上传失败",
+      "fileTooLarge": "文件太大",
+      "uploadFeaturedImage": "上传图片",
+      "toolbar": {
+        "bold": "粗体",
+        "italic": "斜体",
+        "underline": "下划线",
+        "strikethrough": "删除线",
+        "heading1": "标题 1",
+        "heading2": "标题 2",
+        "heading3": "标题 3",
+        "bulletList": "无序列表",
+        "orderedList": "有序列表",
+        "blockquote": "引用",
+        "codeBlock": "代码块",
+        "alignLeft": "左对齐",
+        "alignCenter": "居中",
+        "highlight": "高亮",
+        "link": "链接",
+        "image": "图片",
+        "imageUrlPrompt": "图片URL：",
+        "linkUrlPrompt": "URL："
+      }
+    }
   }
 }

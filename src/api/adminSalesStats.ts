@@ -6,6 +6,7 @@ export interface SalesStatsParams {
   days?: number;
   start_date?: string;
   end_date?: string;
+  tz?: string;
 }
 
 // ============ Summary ============

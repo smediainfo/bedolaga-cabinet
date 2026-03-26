@@ -102,6 +102,7 @@ export interface PurchaseRequest {
   gift_recipient_value?: string;
   gift_message?: string;
   yandex_cid?: string;
+  language?: string;
 }
 
 export interface PurchaseResponse {

@@ -55,20 +55,25 @@ export interface TelegramWidgetConfig {
   oidc_client_id: string;
 }
 
-export interface OfflineConvGoal {
-  name: string;
-  event_id: string;
-  dedup: string;
-}
-
 export interface AnalyticsCounters {
   yandex_metrika_id: string;
   google_ads_id: string;
   google_ads_label: string;
-  offline_conv_enabled?: boolean;
-  offline_conv_counter_id?: string;
-  offline_conv_measurement_secret_masked?: string;
-  offline_conv_goals?: OfflineConvGoal[];
+}
+
+export interface LoginFormSection {
+  type: 'telegram' | 'oauth' | 'email';
+  enabled: boolean;
+  order: number;
+  label?: Record<string, string>;
+}
+
+export interface LoginFormConfig {
+  sections: LoginFormSection[];
+  title?: Record<string, string>;
+  subtitle?: Record<string, string>;
+  show_bot_link?: boolean;
+  show_language_switcher?: boolean;
 }
 
 const BRANDING_CACHE_KEY = 'cabinet_branding';
@@ -305,7 +310,7 @@ export const brandingApi = {
       const response = await apiClient.get<AnalyticsCounters>('/cabinet/branding/analytics');
       return response.data;
     } catch {
-      return { yandex_metrika_id: '', google_ads_id: '', google_ads_label: '', offline_conv_enabled: false, offline_conv_counter_id: '', offline_conv_goals: [] };
+      return { yandex_metrika_id: '', google_ads_id: '', google_ads_label: '' };
     }
   },
 
@@ -333,6 +338,17 @@ export const brandingApi = {
   updateAnalyticsCounters: async (data: Partial<AnalyticsCounters>): Promise<AnalyticsCounters> => {
     const response = await apiClient.patch<AnalyticsCounters>('/cabinet/branding/analytics', data);
     return response.data;
+  },
+
+  // Get login form config (public, no auth required)
+  getLoginFormConfig: async (): Promise<LoginFormConfig> => {
+    const { data } = await apiClient.get<LoginFormConfig>('/cabinet/branding/login-form');
+    return data;
+  },
+
+  // Update login form config (admin only)
+  updateLoginFormConfig: async (config: LoginFormConfig): Promise<void> => {
+    await apiClient.put('/admin/branding/login-form', config);
   },
 
   // Get legal links config

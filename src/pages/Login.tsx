@@ -66,7 +66,7 @@ export default function Login() {
   const [legalModal, setLegalModal] = useState<{ title: string; html: string } | null>(null);
   const [legalLoading, setLegalLoading] = useState(false);
   const [forgotPasswordError, setForgotPasswordError] = useState('');
-  const [showEmailForm, setShowEmailForm] = useState(() => !!referralCode);
+  const [showEmailForm, setShowEmailForm] = useState(true);
 
   // Telegram safe area insets
   const { safeAreaInset, contentSafeAreaInset } = useTelegramSDK();
@@ -469,89 +469,14 @@ export default function Login() {
                     )}
                   </p>
                 </div>
-              ) : (
-                <TelegramLoginButton referralCode={referralCode || undefined} />
-              )}
+              ) : null}
             </div>
 
-            {/* OAuth providers - compact icon row */}
-            {oauthProviders.length > 0 && (
-              <>
-                <div className="my-4 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-dark-700" />
-                  <span className="text-xs text-dark-500">{t('auth.or', 'or')}</span>
-                  <div className="h-px flex-1 bg-dark-700" />
-                </div>
-                <div className="flex items-stretch gap-2">
-                  {oauthProviders.map((provider) => (
-                    <button
-                      key={provider.name}
-                      type="button"
-                      onClick={() => handleOAuthLogin(provider.name)}
-                      disabled={oauthLoading !== null}
-                      className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/80 py-2.5 transition-all hover:border-dark-600 hover:bg-dark-700 disabled:opacity-50"
-                      title={provider.display_name}
-                    >
-                      {oauthLoading === provider.name ? (
-                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-dark-400 border-t-white" />
-                      ) : (
-                        <OAuthProviderIcon provider={provider.name} className="h-5 w-5" />
-                      )}
-                      <span className="text-[10px] leading-none text-dark-500">
-                        {provider.display_name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* Email auth section - collapsible */}
+            {/* Email form - always visible */}
             {isEmailAuthEnabled && (
-              <>
-                <div className="my-4 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-dark-700" />
-                  <button
-                    type="button"
-                    onClick={() => setShowEmailForm(!showEmailForm)}
-                    className="flex items-center gap-1.5 rounded-full border border-dark-700 bg-dark-800/60 px-3.5 py-1.5 text-xs font-medium text-dark-300 transition-all hover:border-dark-600 hover:bg-dark-700 hover:text-dark-200"
-                  >
-                    <svg
-                      className="h-3.5 w-3.5 text-dark-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                      />
-                    </svg>
-                    <span>{t('auth.loginWithEmail')}</span>
-                    <svg
-                      className={`h-3 w-3 text-dark-400 transition-transform duration-300 ${showEmailForm ? 'rotate-180' : ''}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  <div className="h-px flex-1 bg-dark-700" />
-                </div>
+              <div className="space-y-4">
 
-                {/* Collapsible email form */}
-                <div
-                  className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-                    showEmailForm ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                  }`}
-                  style={{ transform: 'translateZ(0)' }}
-                >
-                  <div className="overflow-hidden">
-                    <div className="space-y-4 pb-1 pt-1">
+
                       {showForgotPassword ? (
                         /* Forgot password screen - replaces login/register */
                         forgotPasswordSent ? (
@@ -785,11 +710,59 @@ export default function Login() {
                           )}
                         </>
                       )}
-                    </div>
-                  </div>
-                </div>
-              </>
+              </div>
             )}
+
+            {/* Social auth */}
+            <div className="my-4 flex items-center gap-3">
+              <div className="h-px flex-1 bg-dark-700" />
+              <span className="text-xs text-dark-500">{t('auth.orSignInWith', 'Войти с помощью')}</span>
+              <div className="h-px flex-1 bg-dark-700" />
+            </div>
+            <div className="flex items-stretch gap-2">
+              {!isTelegramWebApp && (
+                <TelegramLoginButton referralCode={referralCode || undefined} compact />
+              )}
+              {oauthProviders.map((provider) => (
+                <button
+                  key={provider.name}
+                  type="button"
+                  onClick={() => handleOAuthLogin(provider.name)}
+                  disabled={oauthLoading !== null}
+                  className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/80 py-2.5 transition-all hover:border-dark-600 hover:bg-dark-700 disabled:opacity-50"
+                  title={provider.display_name}
+                >
+                  {oauthLoading === provider.name ? (
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-dark-400 border-t-white" />
+                  ) : (
+                    <OAuthProviderIcon provider={provider.name} className="h-5 w-5" />
+                  )}
+                  <span className="text-[10px] leading-none text-dark-500">
+                    {provider.display_name}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Bot link */}
+            <div className="mt-4 flex items-center gap-3">
+              <div className="h-px flex-1 bg-dark-700" />
+              <span className="text-xs text-dark-500">{t('auth.orUseBot', 'Или откройте бота в приложении')}</span>
+              <div className="h-px flex-1 bg-dark-700" />
+            </div>
+            <div className="mt-2 flex justify-center">
+              <a
+                href="https://t.me/MatrixxxVPNbot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-dark-700 bg-dark-800/60 px-4 py-2 text-sm text-dark-300 transition-all hover:border-dark-600 hover:bg-dark-700 hover:text-dark-200"
+              >
+                <svg className="h-4 w-4 text-[#54a9eb]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                </svg>
+                @MatrixxxVPNbot
+              </a>
+            </div>
           </div>
         )}
 
