@@ -102,6 +102,7 @@ export interface PurchaseRequest {
   gift_recipient_value?: string;
   gift_message?: string;
   language?: string;
+  referrer?: string;
 }
 
 export interface PurchaseResponse {
@@ -265,6 +266,7 @@ export interface LandingDailyStat {
   purchases: number;
   revenue_kopeks: number;
   gifts: number;
+  created?: number;
 }
 
 export interface LandingTariffStat {
@@ -311,6 +313,7 @@ export interface LandingPurchaseItem {
   status: PurchaseItemStatus;
   created_at: string;
   paid_at: string | null;
+  referrer?: string | null;
 }
 
 export interface LandingPurchaseListResponse {

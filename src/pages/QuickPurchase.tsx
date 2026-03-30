@@ -911,6 +911,19 @@ export default function QuickPurchase() {
   const handleSubmit = () => {
     if (!canSubmit || !slug || isSubmitting) return;
 
+    // Fire Yandex Metrika purchase_click goal
+    try {
+      const w = window as any;
+      if (typeof w.ym === 'function') {
+        // Get counter ID from ym internals (first initialized counter)
+        const calls = w.ym.a || w.ym._calls;
+        const counterId = calls?.[0]?.[0];
+        if (counterId) w.ym(counterId, 'reachGoal', 'purchase_click');
+      }
+    } catch {
+      /* noop */
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -929,6 +942,7 @@ export default function QuickPurchase() {
       payment_method: paymentMethod,
       language: i18n.language,
       is_gift: isGift,
+      referrer: document.referrer || localStorage.getItem('landing_referrer') || undefined,
     };
 
     if (isGift && giftRecipient) {

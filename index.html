@@ -49,6 +49,15 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Capture landing referrer on first load (before SPA navigation overwrites it)
+      (function() {
+        var ref = document.referrer;
+        if (ref && ref.indexOf(location.origin) !== 0) {
+          localStorage.setItem('landing_referrer', ref);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
