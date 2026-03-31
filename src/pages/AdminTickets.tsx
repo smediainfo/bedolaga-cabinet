@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import DOMPurify from 'dompurify';
 import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -654,7 +655,18 @@ export default function AdminTickets() {
                       </span>
                     </div>
                     {msg.message_text && (
-                      <p className="whitespace-pre-wrap text-dark-200">{msg.message_text}</p>
+                      <p
+                        className="whitespace-pre-wrap text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(
+                            msg.message_text.replace(
+                              /(https?:\/\/[^\s<]+)/g,
+                              '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
+                            ),
+                            { ADD_ATTR: ['target'] },
+                          ),
+                        }}
+                      />
                     )}
                     <AdminMessageMedia message={msg} t={t} />
                   </div>
