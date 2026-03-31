@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminApi, AdminTicket, AdminTicketDetail, AdminTicketMessage } from '../api/admin';
 import { ticketsApi } from '../api/tickets';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import DOMPurify from 'dompurify';
 
 interface MediaAttachment {
   file: File;
@@ -78,32 +80,34 @@ function AdminMessageMedia({
         {message.media_caption && (
           <p className="mt-1 text-xs text-dark-400">{message.media_caption}</p>
         )}
-        {showFullImage && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-            onClick={() => setShowFullImage(false)}
-          >
-            <button
-              className="absolute right-4 top-4 text-white/70 hover:text-white"
+        {showFullImage &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
               onClick={() => setShowFullImage(false)}
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
+              <button
+                className="absolute right-4 top-4 text-white/70 hover:text-white"
+                onClick={() => setShowFullImage(false)}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <img
-              src={mediaUrl}
-              alt={message.media_caption || 'Attached image'}
-              className="max-h-full max-w-full object-contain"
-            />
-          </div>
-        )}
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <img
+                src={mediaUrl}
+                alt={message.media_caption || 'Attached image'}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>,
+            document.body,
+          )}
       </div>
     );
   }
@@ -657,7 +661,18 @@ export default function AdminTickets() {
                       </span>
                     </div>
                     {msg.message_text && (
-                      <p className="whitespace-pre-wrap text-dark-200">{msg.message_text}</p>
+                      <p
+                        className="whitespace-pre-wrap text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(
+                            msg.message_text.replace(
+                              /(https?:\/\/[^\s<]+)/g,
+                              '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
+                            ),
+                            { ADD_ATTR: ['target'] },
+                          ),
+                        }}
+                      />
                     )}
                     <AdminMessageMedia message={msg} t={t} />
                   </div>

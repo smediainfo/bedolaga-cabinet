@@ -943,6 +943,7 @@ export default function QuickPurchase() {
       language: i18n.language,
       is_gift: isGift,
       referrer: document.referrer || localStorage.getItem('landing_referrer') || undefined,
+      yandex_cid: localStorage.getItem('yandex_cid') || undefined,
     };
 
     if (isGift && giftRecipient) {
