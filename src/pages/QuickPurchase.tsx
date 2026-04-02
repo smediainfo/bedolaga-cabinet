@@ -738,6 +738,13 @@ export default function QuickPurchase() {
     if (config?.discount) setDiscountExpired(false);
   }, [config?.discount]);
 
+  // Save document.referrer on mount (before SPA navigation loses it)
+  useEffect(() => {
+    if (document.referrer && !sessionStorage.getItem('landing_referrer')) {
+      sessionStorage.setItem('landing_referrer', document.referrer);
+    }
+  }, []);
+
   // Fire landing-specific view goal on mount
   useEffect(() => {
     if (config?.analytics_view_enabled && config?.analytics_view_goal) {
@@ -945,6 +952,7 @@ export default function QuickPurchase() {
       payment_method: paymentMethod,
       language: i18n.language,
       is_gift: isGift,
+      referrer: sessionStorage.getItem('landing_referrer') || undefined,
     };
 
     if (isGift && giftRecipient) {

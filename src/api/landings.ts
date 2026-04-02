@@ -106,6 +106,8 @@ export interface PurchaseRequest {
   gift_recipient_value?: string;
   gift_message?: string;
   language?: string;
+  yandex_cid?: string;
+  referrer?: string;
 }
 
 export interface PurchaseResponse {
@@ -276,6 +278,7 @@ export const landingApi = {
 
 export interface LandingDailyStat {
   date: string;
+  created: number;
   purchases: number;
   revenue_kopeks: number;
   gifts: number;
