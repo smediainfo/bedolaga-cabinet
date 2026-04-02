@@ -738,6 +738,19 @@ export default function QuickPurchase() {
     if (config?.discount) setDiscountExpired(false);
   }, [config?.discount]);
 
+  // Fire landing-specific view goal on mount
+  useEffect(() => {
+    if (config?.analytics_view_enabled && config?.analytics_view_goal) {
+      try {
+        const w = window as unknown as Record<string, unknown>;
+        const counterId = localStorage.getItem('ym_counter_id');
+        if (counterId && typeof w.ym === 'function') {
+          (w.ym as Function)(Number(counterId), 'reachGoal', config.analytics_view_goal);
+        }
+      } catch {}
+    }
+  }, [config?.analytics_view_enabled, config?.analytics_view_goal]);
+
   // Selection state
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
   const [selectedPeriodDays, setSelectedPeriodDays] = useState<number | null>(null);
@@ -940,6 +953,7 @@ export default function QuickPurchase() {
       data.gift_message = giftMessage.trim() || undefined;
     }
 
+    // Get Yandex CID for offline conversions
     try {
       const w = window as unknown as Record<string, unknown>;
       const counterId = localStorage.getItem('ym_counter_id');
@@ -949,6 +963,17 @@ export default function QuickPurchase() {
         });
       }
     } catch {}
+
+    // Fire landing-specific click goal
+    if (config?.analytics_click_enabled && config?.analytics_click_goal) {
+      try {
+        const w = window as unknown as Record<string, unknown>;
+        const counterId = localStorage.getItem('ym_counter_id');
+        if (counterId && typeof w.ym === 'function') {
+          (w.ym as Function)(Number(counterId), 'reachGoal', config.analytics_click_goal);
+        }
+      } catch {}
+    }
 
     purchaseMutation.mutate(data);
   };
