@@ -1746,6 +1746,8 @@
       "yandexMetrika": "Яндекс Метрика",
       "yandexMetrikaDesc": "Отслеживание посетителей и анализ поведения на сайте",
       "counterId": "ID счётчика",
+      "offlineConv": "Офлайн-конверсии",
+      "offlineConvApiKey": "API-ключ",
       "yandexIdPlaceholder": "Например: 87654321",
       "yandexIdHint": "Числовой ID из metrika.yandex.ru",
       "googleAds": "Google Ads",

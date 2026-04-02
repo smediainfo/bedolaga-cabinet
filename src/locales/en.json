@@ -1676,6 +1676,8 @@
       "yandexMetrika": "Yandex Metrika",
       "yandexMetrikaDesc": "Track visitors and analyze website behavior",
       "counterId": "Counter ID",
+      "offlineConv": "Offline conversions",
+      "offlineConvApiKey": "API key",
       "yandexIdPlaceholder": "e.g. 87654321",
       "yandexIdHint": "Numeric ID from metrika.yandex.ru",
       "googleAds": "Google Ads",
