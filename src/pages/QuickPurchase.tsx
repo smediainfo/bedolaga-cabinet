@@ -17,6 +17,8 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { cn } from '../lib/utils';
 import { getApiErrorMessage } from '../utils/api-error';
 import { formatPrice } from '../utils/format';
+import { brandingApi } from '../api/branding';
+import { getYandexCid } from '../hooks/useAnalyticsCounters';
 
 function detectContactType(value: string): 'email' | 'telegram' {
   return value.startsWith('@') ? 'telegram' : 'email';
@@ -725,6 +727,13 @@ export default function QuickPurchase() {
     retry: 1,
   });
 
+  // Yandex Metrika counter ID (already fetched at App level, just read from cache)
+  const { data: analyticsCounters } = useQuery({
+    queryKey: ['analytics-counters'],
+    queryFn: brandingApi.getAnalyticsCounters,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const [discountExpired, setDiscountExpired] = useState(false);
 
   const handleDiscountExpired = useCallback(() => {
@@ -908,7 +917,7 @@ export default function QuickPurchase() {
   });
 
   // Submit handler
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit || !slug || isSubmitting) return;
 
     setIsSubmitting(true);
@@ -921,6 +930,9 @@ export default function QuickPurchase() {
       paymentMethod = `${paymentMethod}_${selectedSubOption}`;
     }
 
+    // Get Yandex ClientID for offline conversions (non-blocking, 500ms timeout)
+    const yandexCid = await getYandexCid(analyticsCounters?.yandex_metrika_id);
+
     const data: PurchaseRequest = {
       tariff_id: selectedTariffId!,
       period_days: selectedPeriodDays!,
@@ -928,6 +940,7 @@ export default function QuickPurchase() {
       contact_value: contactValue.trim(),
       payment_method: paymentMethod,
       is_gift: isGift,
+      yandex_cid: yandexCid,
     };
 
     if (isGift && giftRecipient) {

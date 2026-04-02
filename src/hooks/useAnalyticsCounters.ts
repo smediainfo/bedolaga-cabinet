@@ -53,6 +53,30 @@ function injectGoogleAds(conversionId: string) {
 }
 
 /**
+ * Retrieves the Yandex Metrika ClientID via the `ym` global.
+ * Returns a Promise that resolves to the CID string or `undefined`
+ * (never rejects). Uses a 500 ms timeout to avoid blocking the caller.
+ */
+export function getYandexCid(counterId: string | undefined): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    try {
+      const w = window as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (!counterId || typeof w.ym !== 'function') {
+        resolve(undefined);
+        return;
+      }
+      const timer = setTimeout(() => resolve(undefined), 500);
+      w.ym(Number(counterId), 'getClientID', (cid: string) => {
+        clearTimeout(timer);
+        resolve(cid || undefined);
+      });
+    } catch {
+      resolve(undefined);
+    }
+  });
+}
+
+/**
  * Fetches analytics counter settings from the API and dynamically
  * injects Yandex Metrika and/or Google Ads scripts into <head>.
  */
