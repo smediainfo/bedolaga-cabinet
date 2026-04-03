@@ -761,7 +761,7 @@ export default function QuickPurchase() {
   // Selection state
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
   const [selectedPeriodDays, setSelectedPeriodDays] = useState<number | null>(null);
-  const [contactValue, setContactValue] = useState('');
+  const [contactValue, setContactValue] = useState(() => localStorage.getItem('lp_contact') || '');
   const [isGift, setIsGift] = useState(false);
   const [giftRecipient, setGiftRecipient] = useState('');
   const [giftMessage, setGiftMessage] = useState('');
@@ -1061,6 +1061,7 @@ export default function QuickPurchase() {
               contactValue={contactValue}
               onContactChange={(v) => {
                 setContactValue(v);
+                localStorage.setItem('lp_contact', v);
                 setSubmitError(null);
               }}
               isGift={isGift}
