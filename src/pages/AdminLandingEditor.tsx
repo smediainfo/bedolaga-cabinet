@@ -143,6 +143,7 @@ export default function AdminLandingEditor() {
   const [analyticsViewGoal, setAnalyticsViewGoal] = useState('landing_view');
   const [analyticsClickEnabled, setAnalyticsClickEnabled] = useState(false);
   const [analyticsClickGoal, setAnalyticsClickGoal] = useState('landing_pay');
+  const [stickyPayButton, setStickyPayButton] = useState(false);
 
   // Discount state
   const [discountPercent, setDiscountPercent] = useState<number | null>(null);
@@ -278,6 +279,7 @@ export default function AdminLandingEditor() {
     setAnalyticsViewGoal(landingData.analytics_view_goal || 'landing_view');
     setAnalyticsClickEnabled(landingData.analytics_click_enabled ?? false);
     setAnalyticsClickGoal(landingData.analytics_click_goal || 'landing_pay');
+    setStickyPayButton(landingData.sticky_pay_button ?? false);
   }, [landingData]);
 
   // Create mutation
@@ -393,6 +395,7 @@ export default function AdminLandingEditor() {
       analytics_view_goal: analyticsViewGoal,
       analytics_click_enabled: analyticsClickEnabled,
       analytics_click_goal: analyticsClickGoal,
+      sticky_pay_button: stickyPayButton,
     };
 
     if (isEdit) {
@@ -1135,6 +1138,14 @@ export default function AdminLandingEditor() {
                 />
               </div>
               <Toggle checked={analyticsClickEnabled} onChange={() => setAnalyticsClickEnabled(v => !v)} />
+            </div>
+            {/* Sticky pay button on mobile */}
+            <div className="flex items-center justify-between gap-4 border-t border-dark-800 pt-4">
+              <div>
+                <p className="text-sm text-dark-300">Sticky кнопка оплаты (мобильная)</p>
+                <p className="text-xs text-dark-500">Кнопка прижата к низу экрана на мобильных</p>
+              </div>
+              <Toggle checked={stickyPayButton} onChange={() => setStickyPayButton(v => !v)} />
             </div>
           </div>
         </Section>

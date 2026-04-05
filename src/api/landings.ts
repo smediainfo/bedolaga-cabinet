@@ -93,6 +93,7 @@ export interface LandingConfig {
   analytics_view_goal: string;
   analytics_click_enabled: boolean;
   analytics_click_goal: string;
+  sticky_pay_button: boolean;
 }
 
 export interface PurchaseRequest {
@@ -207,6 +208,7 @@ export interface LandingDetail {
   analytics_view_goal: string;
   analytics_click_enabled: boolean;
   analytics_click_goal: string;
+  sticky_pay_button: boolean;
 }
 
 export interface LandingCreateRequest {
@@ -233,6 +235,7 @@ export interface LandingCreateRequest {
   analytics_view_goal?: string;
   analytics_click_enabled?: boolean;
   analytics_click_goal?: string;
+  sticky_pay_button?: boolean;
 }
 
 export type LandingUpdateRequest = Partial<LandingCreateRequest>;

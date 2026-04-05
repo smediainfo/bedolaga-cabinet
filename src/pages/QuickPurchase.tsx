@@ -1,8 +1,10 @@
+// v2 - yandex cid fix
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { fireAnalyticsEvent } from '../hooks/useAnalyticsCounters';
+import { fireAnalyticsEvent, getYandexCid } from '../hooks/useAnalyticsCounters';
 import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
 import { landingApi } from '../api/landings';
@@ -471,6 +473,7 @@ function SummaryCard({
   currentPrice,
   isSubmitting,
   canSubmit,
+  stickyPayButton = false,
   submitError,
   onSubmit,
 }: {
@@ -480,10 +483,19 @@ function SummaryCard({
   currentPrice: number;
   isSubmitting: boolean;
   canSubmit: boolean;
+  stickyPayButton?: boolean;
   submitError: string | null;
   onSubmit: () => void;
 }) {
   const { t } = useTranslation();
+
+  // Responsive: track mobile for sticky pay button
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -570,32 +582,66 @@ function SummaryCard({
       </AnimatePresence>
 
       {/* Pay button */}
-      <button
-        type="button"
-        onClick={onSubmit}
-        disabled={!canSubmit || isSubmitting}
-        className={cn(
-          'flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold transition-all duration-200',
-          canSubmit && !isSubmitting
-            ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:bg-accent-400 hover:shadow-accent-500/40 active:scale-[0.98]'
-            : 'cursor-not-allowed bg-dark-800 text-dark-500',
-        )}
-      >
-        {isSubmitting ? (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-        ) : (
-          <>
-            {t('landing.pay', 'Pay')}{' '}
-            {selectedPeriod?.original_price_kopeks != null &&
-              selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
-                <span className="mr-1 text-sm font-normal text-white/50 line-through">
-                  {formatPrice(selectedPeriod.original_price_kopeks)}
-                </span>
-              )}
-            {formatPrice(currentPrice)}
-          </>
-        )}
-      </button>
+      {stickyPayButton && isMobile ? (
+        createPortal(
+          <div className="fixed bottom-0 left-0 right-0 z-50 p-3" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, transparent 100%)' }}>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!canSubmit || isSubmitting}
+          className={cn(
+            'flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold transition-all duration-200',
+            canSubmit && !isSubmitting
+              ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:bg-accent-400 hover:shadow-accent-500/40 active:scale-[0.98]'
+              : 'cursor-not-allowed bg-dark-800 text-dark-500',
+          )}
+        >
+          {isSubmitting ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          ) : (
+            <>
+              {t('landing.pay', 'Pay')}{' '}
+              {selectedPeriod?.original_price_kopeks != null &&
+                selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
+                  <span className="mr-1 text-sm font-normal text-white/50 line-through">
+                    {formatPrice(selectedPeriod.original_price_kopeks)}
+                  </span>
+                )}
+              {formatPrice(currentPrice)}
+            </>
+          )}
+        </button>
+          </div>,
+          document.body
+        )
+      ) : (
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!canSubmit || isSubmitting}
+          className={cn(
+            'flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold transition-all duration-200',
+            canSubmit && !isSubmitting
+              ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:bg-accent-400 hover:shadow-accent-500/40 active:scale-[0.98]'
+              : 'cursor-not-allowed bg-dark-800 text-dark-500',
+          )}
+        >
+          {isSubmitting ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          ) : (
+            <>
+              {t('landing.pay', 'Pay')}{' '}
+              {selectedPeriod?.original_price_kopeks != null &&
+                selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
+                  <span className="mr-1 text-sm font-normal text-white/50 line-through">
+                    {formatPrice(selectedPeriod.original_price_kopeks)}
+                  </span>
+                )}
+              {formatPrice(currentPrice)}
+            </>
+          )}
+        </button>
+      )}
 
       {/* Footer */}
       {config.footer_text && (
@@ -768,6 +814,7 @@ export default function QuickPurchase() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedSubOption, setSelectedSubOption] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [submitError, setSubmitError] = useState<string | null>(null);
   const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -866,8 +913,7 @@ export default function QuickPurchase() {
 
     let css = config.custom_css;
     // Strip all at-rules (including @font-face, @import, @charset, @namespace, @keyframes, @media)
-    css = css.replace(/@[a-zA-Z-]+\s*[^{}]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, '');
-    css = css.replace(/@[a-zA-Z-]+\s*[^;{}]+;/g, '');
+    css = css.replace(/@(?:import|font-face|charset|namespace)[^;{}]*(?:\{[^{}]*\}|;)/gi, '');
     // Strip ALL url() including data: URIs
     css = css.replace(/url\s*\([^)]*\)/gi, 'url(about:blank)');
     // Strip expression(), behavior, -moz-binding
@@ -961,16 +1007,9 @@ export default function QuickPurchase() {
       data.gift_message = giftMessage.trim() || undefined;
     }
 
-    // Get Yandex CID for offline conversions
-    try {
-      const w = window as unknown as Record<string, unknown>;
-      const counterId = localStorage.getItem('ym_counter_id');
-      if (counterId && typeof w.ym === 'function') {
-        (w.ym as Function)(Number(counterId), 'getClientID', (cid: string) => {
-          if (cid) data.yandex_cid = cid;
-        });
-      }
-    } catch {}
+    // Get Yandex CID for offline conversions (sync from localStorage)
+    const ymCid = getYandexCid();
+    if (ymCid) data.yandex_cid = ymCid;
 
     // Fire landing-specific click goal
     if (config?.analytics_click_enabled && config?.analytics_click_goal) {
@@ -1142,7 +1181,7 @@ export default function QuickPurchase() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="min-w-0 lg:sticky lg:top-8 lg:self-start"
+            className={cn("min-w-0 lg:sticky lg:top-8 lg:self-start", config?.sticky_pay_button && "mb-20 lg:mb-0")}
           >
             <SummaryCard
               config={config}
@@ -1153,10 +1192,12 @@ export default function QuickPurchase() {
               canSubmit={canSubmit}
               submitError={submitError}
               onSubmit={handleSubmit}
+              stickyPayButton={config?.sticky_pay_button}
             />
           </motion.div>
         </div>
       </div>
+
     </div>
   );
 }
