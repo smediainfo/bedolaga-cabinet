@@ -203,6 +203,7 @@ export const authApi = {
         device_id: deviceId || undefined,
         campaign_slug: campaignSlug || undefined,
         referral_code: referralCode || undefined,
+        yandex_cid: getYandexCid() || undefined,
       },
     );
     return response.data;
