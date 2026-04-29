@@ -174,8 +174,6 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
       return;
     }
     setScanning(true);
-    // wait one paint so #tv-qr-reader exists in DOM
-    await new Promise<void>((r) => requestAnimationFrame(() => r()));
     const scanner = new w.Html5Qrcode('tv-qr-reader');
     scannerRef.current = scanner;
     const config = { fps: 10, qrbox: { width: 220, height: 220 } };
@@ -286,7 +284,7 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
               {t('subscription.tvQuickConnect.scanDescription')}
             </p>
 
-            {!scanning ? (
+            {!scanning && (
               <button onClick={startScan} className="btn-secondary mt-3 w-full justify-center py-3">
                 <svg
                   className="mr-2 h-5 w-5"
@@ -308,14 +306,15 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
                 </svg>
                 {t('subscription.tvQuickConnect.scanBtn')}
               </button>
-            ) : (
-              <div className="mt-3 space-y-2">
-                <div id="tv-qr-reader" className="overflow-hidden rounded-xl" />
+            )}
+            <div className={scanning ? 'mt-3 space-y-2' : 'hidden'}>
+              <div id="tv-qr-reader" className="overflow-hidden rounded-xl" />
+              {scanning && (
                 <button onClick={stopScan} className="btn-secondary w-full justify-center py-2.5">
                   {t('subscription.tvQuickConnect.stopScan')}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
