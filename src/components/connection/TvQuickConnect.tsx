@@ -3,10 +3,22 @@ import { useTranslation } from 'react-i18next';
 import { openQrScanner, isQrScannerSupported } from '@telegram-apps/sdk-react';
 
 const HAPP_TV_API = 'https://check.happ.su/sendtv';
+const HTML5_QRCODE_CDN = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
 
 interface Props {
   subscriptionUrl: string;
   isLight: boolean;
+}
+
+interface Html5QrcodeInstance {
+  start: (
+    cameraIdOrConfig: { facingMode: string } | string,
+    config: { fps: number; qrbox: { width: number; height: number } },
+    onSuccess: (decoded: string) => void,
+    onError: () => void,
+  ) => Promise<void>;
+  stop: () => Promise<void>;
+  clear: () => void;
 }
 
 export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
@@ -14,17 +26,28 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
   const [code, setCode] = useState('');
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [scannerAvailable, setScannerAvailable] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [tgNative, setTgNative] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const scannerRef = useRef<Html5QrcodeInstance | null>(null);
 
   useEffect(() => {
     try {
-      setScannerAvailable(isQrScannerSupported() && openQrScanner.isAvailable());
+      setTgNative(isQrScannerSupported() && openQrScanner.isAvailable());
     } catch {
-      setScannerAvailable(false);
+      setTgNative(false);
     }
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (scannerRef.current) {
+        scannerRef.current
+          .stop()
+          .catch(() => undefined)
+          .finally(() => {
+            scannerRef.current?.clear();
+            scannerRef.current = null;
+          });
+      }
     };
   }, []);
 
@@ -72,23 +95,87 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
     [sending, subscriptionUrl, showToast, t],
   );
 
-  const startScan = useCallback(async () => {
-    try {
-      const qr = await openQrScanner({
-        text: t('subscription.tvQuickConnect.scanDescription'),
-        capture: (s: string) => parseQRCode(s) !== null,
-      });
-      if (!qr) return;
-      const parsed = parseQRCode(qr);
-      if (parsed) {
-        setCode(parsed);
-        showToast(t('subscription.tvQuickConnect.codeFound'), 'success');
-        sendToTV(parsed);
-      }
-    } catch {
-      showToast(t('subscription.tvQuickConnect.error'), 'error');
+  const stopScan = useCallback(() => {
+    if (scannerRef.current) {
+      scannerRef.current
+        .stop()
+        .catch(() => undefined)
+        .finally(() => {
+          scannerRef.current?.clear();
+          scannerRef.current = null;
+        });
     }
-  }, [sendToTV, showToast, t]);
+    setScanning(false);
+  }, []);
+
+  const onScanDecoded = useCallback(
+    (decoded: string) => {
+      const parsed = parseQRCode(decoded);
+      if (!parsed) return;
+      stopScan();
+      setCode(parsed);
+      showToast(`${t('subscription.tvQuickConnect.codeFound')}: ${parsed}`, 'success');
+      setTimeout(() => sendToTV(parsed), 500);
+    },
+    [stopScan, showToast, sendToTV, t],
+  );
+
+  const startScan = useCallback(async () => {
+    // Telegram Mini App: native scanner
+    if (tgNative) {
+      try {
+        const qr = await openQrScanner({
+          text: t('subscription.tvQuickConnect.scanDescription'),
+          capture: (s: string) => parseQRCode(s) !== null,
+        });
+        if (qr) {
+          const parsed = parseQRCode(qr);
+          if (parsed) {
+            setCode(parsed);
+            showToast(t('subscription.tvQuickConnect.codeFound'), 'success');
+            sendToTV(parsed);
+          }
+        }
+      } catch {
+        showToast(t('subscription.tvQuickConnect.error'), 'error');
+      }
+      return;
+    }
+
+    // Browser fallback (Mac/iOS Safari, desktop Chrome): html5-qrcode
+    type WindowWithHtml5 = Window & { Html5Qrcode?: new (id: string) => Html5QrcodeInstance };
+    const w = window as WindowWithHtml5;
+    if (!w.Html5Qrcode) {
+      const script = document.createElement('script');
+      script.src = HTML5_QRCODE_CDN;
+      document.head.appendChild(script);
+      await new Promise<void>((resolve, reject) => {
+        script.onload = () => resolve();
+        script.onerror = () => reject();
+      }).catch(() => undefined);
+    }
+    if (!w.Html5Qrcode) {
+      showToast(t('subscription.tvQuickConnect.noCamera'), 'error');
+      return;
+    }
+    setScanning(true);
+    // wait one paint so #tv-qr-reader exists in DOM
+    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+    const scanner = new w.Html5Qrcode('tv-qr-reader');
+    scannerRef.current = scanner;
+    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+    try {
+      await scanner.start({ facingMode: 'environment' }, config, onScanDecoded, () => undefined);
+    } catch {
+      try {
+        await scanner.start({ facingMode: 'user' }, config, onScanDecoded, () => undefined);
+      } catch {
+        showToast(t('subscription.tvQuickConnect.noCamera'), 'error');
+        scannerRef.current = null;
+        setScanning(false);
+      }
+    }
+  }, [tgNative, sendToTV, showToast, onScanDecoded, t]);
 
   const cardClass = isLight
     ? 'rounded-2xl border border-dark-700/60 bg-white/80 shadow-sm p-4 sm:p-5'
@@ -153,38 +240,38 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
         </div>
       </div>
 
-      {/* QR Scanner — only when Telegram native scanner is supported */}
-      {scannerAvailable && (
-        <div className={cardClass}>
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10">
-              <svg
-                className="h-5 w-5 text-blue-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"
-                />
-              </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-dark-100">
-                {t('subscription.tvQuickConnect.scanTitle')}
-              </h3>
-              <p className="mt-1 text-sm text-dark-400">
-                {t('subscription.tvQuickConnect.scanDescription')}
-              </p>
+      {/* QR Scanner */}
+      <div className={cardClass}>
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10">
+            <svg
+              className="h-5 w-5 text-blue-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"
+              />
+            </svg>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-dark-100">
+              {t('subscription.tvQuickConnect.scanTitle')}
+            </h3>
+            <p className="mt-1 text-sm text-dark-400">
+              {t('subscription.tvQuickConnect.scanDescription')}
+            </p>
 
+            {!scanning ? (
               <button onClick={startScan} className="btn-secondary mt-3 w-full justify-center py-3">
                 <svg
                   className="mr-2 h-5 w-5"
@@ -206,10 +293,17 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
                 </svg>
                 {t('subscription.tvQuickConnect.scanBtn')}
               </button>
-            </div>
+            ) : (
+              <div className="mt-3 space-y-2">
+                <div id="tv-qr-reader" className="overflow-hidden rounded-xl" />
+                <button onClick={stopScan} className="btn-secondary w-full justify-center py-2.5">
+                  {t('subscription.tvQuickConnect.stopScan')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Toast */}
       {toast && (
