@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { openQrScanner, isQrScannerSupported } from '@telegram-apps/sdk-react';
 
 const HAPP_TV_API = 'https://check.happ.su/sendtv';
 
@@ -116,7 +117,26 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
   }, [stopScan, showToast, sendToTV, t]);
 
   const startScan = useCallback(async () => {
-    // Load jsQR if not present
+    // Telegram Mini App: native scanner (works on iOS/Android)
+    try {
+      if (isQrScannerSupported() && openQrScanner.isAvailable()) {
+        const qr = await openQrScanner({
+          text: t('subscription.tvQuickConnect.scanDescription'),
+          capture: (s: string) => /^[A-Z0-9]{5}$/i.test(s.trim()),
+        });
+        if (qr) {
+          const clean = qr.trim().toUpperCase();
+          setCode(clean);
+          showToast(t('subscription.tvQuickConnect.codeFound'), 'success');
+          sendToTV(clean);
+        }
+        return;
+      }
+    } catch {
+      // fall through to browser scanner
+    }
+
+    // Browser: jsQR + getUserMedia
     // @ts-expect-error jsQR loaded via CDN
     if (!window.jsQR) {
       const script = document.createElement('script');
@@ -127,22 +147,34 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
       });
     }
 
+    let stream: MediaStream | null = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
       });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-      scanningRef.current = true;
-      setScanning(true);
-      requestAnimationFrame(scanFrame);
     } catch {
-      showToast(t('subscription.tvQuickConnect.noCamera'), 'error');
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch {
+        showToast(t('subscription.tvQuickConnect.noCamera'), 'error');
+        return;
+      }
     }
-  }, [scanFrame, showToast, t]);
+    streamRef.current = stream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.muted = true;
+      videoRef.current.setAttribute('playsinline', 'true');
+      try {
+        await videoRef.current.play();
+      } catch {
+        videoRef.current.play().catch(() => undefined);
+      }
+    }
+    scanningRef.current = true;
+    setScanning(true);
+    requestAnimationFrame(scanFrame);
+  }, [scanFrame, sendToTV, showToast, t]);
 
   useEffect(() => {
     return () => {
