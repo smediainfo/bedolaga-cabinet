@@ -156,8 +156,7 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
         return;
       }
     }
-    requestAnimationFrame(scanFrame);
-  }, [scanFrame, sendToTV, showToast, t]);
+  }, [onScanSuccess, sendToTV, showToast, t]);
 
   useEffect(() => {
     return () => {
