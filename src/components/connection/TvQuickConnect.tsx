@@ -1,6 +1,21 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openQrScanner, isQrScannerSupported } from '@telegram-apps/sdk-react';
+import {
+  openQrScanner,
+  isQrScannerSupported,
+  retrieveLaunchParams,
+} from '@telegram-apps/sdk-react';
+
+const TG_MOBILE_PLATFORMS = new Set(['ios', 'android', 'android_x', 'ios_x']);
+
+function isTelegramMobile(): boolean {
+  try {
+    const platform = retrieveLaunchParams().tgWebAppPlatform;
+    return TG_MOBILE_PLATFORMS.has(platform);
+  } catch {
+    return false;
+  }
+}
 
 const HAPP_TV_API = 'https://check.happ.su/sendtv';
 const HTML5_QRCODE_CDN = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
@@ -33,7 +48,7 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
 
   useEffect(() => {
     try {
-      setTgNative(isQrScannerSupported() && openQrScanner.isAvailable());
+      setTgNative(isTelegramMobile() && isQrScannerSupported() && openQrScanner.isAvailable());
     } catch {
       setTgNative(false);
     }
