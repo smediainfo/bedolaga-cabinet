@@ -71,7 +71,15 @@ const TopUpResult = lazyWithRetry(() => import('./pages/TopUpResult'));
 const ConnectedAccounts = lazyWithRetry(() => import('./pages/ConnectedAccounts'));
 const LinkTelegramCallback = lazyWithRetry(() => import('./pages/LinkTelegramCallback'));
 const MergeAccounts = lazyWithRetry(() => import('./pages/MergeAccounts'));
-const PublicLegalDoc = lazyWithRetry(() => import('./pages/PublicLegalDoc'));
+const PublicPrivacyPage = lazyWithRetry(() =>
+  import('./pages/PublicLegalDoc').then((m) => ({ default: m.PublicPrivacyPage })),
+);
+const PublicOfferPage = lazyWithRetry(() =>
+  import('./pages/PublicLegalDoc').then((m) => ({ default: m.PublicOfferPage })),
+);
+const PublicRecurrentPaymentsPage = lazyWithRetry(() =>
+  import('./pages/PublicLegalDoc').then((m) => ({ default: m.PublicRecurrentPaymentsPage })),
+);
 
 // Admin pages - lazy load (only for admins)
 const AdminPanel = lazyWithRetry(() => import('./pages/AdminPanel'));
@@ -289,7 +297,7 @@ function App() {
           path="/privacy"
           element={
             <LazyPage>
-              <PublicLegalDoc docType="privacy" />
+              <PublicPrivacyPage />
             </LazyPage>
           }
         />
@@ -297,7 +305,7 @@ function App() {
           path="/offer"
           element={
             <LazyPage>
-              <PublicLegalDoc docType="offer" />
+              <PublicOfferPage />
             </LazyPage>
           }
         />
@@ -305,7 +313,7 @@ function App() {
           path="/recurrent-payments"
           element={
             <LazyPage>
-              <PublicLegalDoc docType="recurrent" />
+              <PublicRecurrentPaymentsPage />
             </LazyPage>
           }
         />

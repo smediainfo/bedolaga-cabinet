@@ -94,7 +94,7 @@ const formatContent = (content: string): string => {
   return DOMPurify.sanitize(result, SANITIZE_CONFIG);
 };
 
-export default function PublicLegalDoc({ docType }: { docType: DocType }) {
+function PublicLegalDocInternal({ docType }: { docType: DocType }) {
   const meta = DOC_META[docType];
   const [updatedAtFormatted, setUpdatedAtFormatted] = useState<string | null>(null);
 
@@ -175,4 +175,18 @@ export default function PublicLegalDoc({ docType }: { docType: DocType }) {
       `}</style>
     </div>
   );
+}
+
+export default PublicLegalDocInternal;
+
+export function PublicPrivacyPage() {
+  return <PublicLegalDocInternal docType="privacy" />;
+}
+
+export function PublicOfferPage() {
+  return <PublicLegalDocInternal docType="offer" />;
+}
+
+export function PublicRecurrentPaymentsPage() {
+  return <PublicLegalDocInternal docType="recurrent" />;
 }
