@@ -354,7 +354,12 @@ export default function TopUpAmount() {
       ? Math.round(convertAmount(rub)).toString()
       : convertAmount(rub).toFixed(currencyDecimals);
   const isPending = topUpMutation.isPending || starsPaymentMutation.isPending;
-  const needsConsent = Boolean(method.requires_recurring_consent);
+  // Recurring registers only on real card payments. Wallet-style sub-options
+  // (SberPay, YooMoney, etc.) don't support COF, so don't ask for consent.
+  const subOptionSupportsRecurring = hasOptions
+    ? selectedOption === 'card' || selectedOption === 'card-partner'
+    : true;
+  const needsConsent = Boolean(method.requires_recurring_consent) && subOptionSupportsRecurring;
   const isPayBlocked =
     isPending || !amount || parseFloat(amount) <= 0 || (needsConsent && !consentAccepted);
 

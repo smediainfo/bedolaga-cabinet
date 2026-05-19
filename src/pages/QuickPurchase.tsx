@@ -1011,7 +1011,15 @@ export default function QuickPurchase() {
     () => config?.payment_methods?.find((m) => m.method_id === selectedMethod),
     [config, selectedMethod],
   );
-  const needsConsent = Boolean(selectedMethodConfig?.requires_recurring_consent);
+  // Recurring registers only on card sub-option. Wallet-style options skip consent.
+  const hasSubOptions = Boolean(
+    selectedMethodConfig?.sub_options && selectedMethodConfig.sub_options.length > 0,
+  );
+  const subOptionSupportsRecurring = hasSubOptions
+    ? selectedSubOption === 'card' || selectedSubOption === 'card-partner'
+    : true;
+  const needsConsent =
+    Boolean(selectedMethodConfig?.requires_recurring_consent) && subOptionSupportsRecurring;
 
   // Validation
   const canSubmit = useMemo(() => {
