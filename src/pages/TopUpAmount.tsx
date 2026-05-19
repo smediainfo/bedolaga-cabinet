@@ -354,10 +354,10 @@ export default function TopUpAmount() {
       ? Math.round(convertAmount(rub)).toString()
       : convertAmount(rub).toFixed(currencyDecimals);
   const isPending = topUpMutation.isPending || starsPaymentMutation.isPending;
-  // Recurring registers only on real card payments. Wallet-style sub-options
-  // (SberPay, YooMoney, etc.) don't support COF, so don't ask for consent.
+  // Recurring is supported by card + SberPay sub-options. YooMoney/Wallet
+  // sub-options don't support COF and must not trigger the consent gate.
   const subOptionSupportsRecurring = hasOptions
-    ? selectedOption === 'card' || selectedOption === 'card-partner'
+    ? selectedOption === 'card' || selectedOption === 'card-partner' || selectedOption === 'sberpay'
     : true;
   const needsConsent = Boolean(method.requires_recurring_consent) && subOptionSupportsRecurring;
   const isPayBlocked =
