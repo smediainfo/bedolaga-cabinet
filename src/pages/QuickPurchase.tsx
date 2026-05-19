@@ -1011,18 +1011,7 @@ export default function QuickPurchase() {
     () => config?.payment_methods?.find((m) => m.method_id === selectedMethod),
     [config, selectedMethod],
   );
-  // Recurring is supported on card + SberPay sub-options. YooMoney/Wallet
-  // sub-options don't support COF and must not trigger the consent gate.
-  const hasSubOptions = Boolean(
-    selectedMethodConfig?.sub_options && selectedMethodConfig.sub_options.length > 0,
-  );
-  const subOptionSupportsRecurring = hasSubOptions
-    ? selectedSubOption === 'card' ||
-      selectedSubOption === 'card-partner' ||
-      selectedSubOption === 'sberpay'
-    : true;
-  const needsConsent =
-    Boolean(selectedMethodConfig?.requires_recurring_consent) && subOptionSupportsRecurring;
+  const needsConsent = Boolean(selectedMethodConfig?.requires_recurring_consent);
 
   // Validation
   const canSubmit = useMemo(() => {
