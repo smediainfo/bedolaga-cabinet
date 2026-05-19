@@ -73,6 +73,7 @@ const TopUpResult = lazyWithRetry(() => import('./pages/TopUpResult'));
 const ConnectedAccounts = lazyWithRetry(() => import('./pages/ConnectedAccounts'));
 const LinkTelegramCallback = lazyWithRetry(() => import('./pages/LinkTelegramCallback'));
 const MergeAccounts = lazyWithRetry(() => import('./pages/MergeAccounts'));
+const PublicLegalDoc = lazyWithRetry(() => import('./pages/PublicLegalDoc'));
 
 // Admin pages - lazy load (only for admins)
 const AdminPanel = lazyWithRetry(() => import('./pages/AdminPanel'));
@@ -289,6 +290,32 @@ function App() {
                 <AutoLogin />
               </LazyPage>
             </ErrorBoundary>
+          }
+        />
+
+        {/* Public legal pages — accessible without authentication */}
+        <Route
+          path="/privacy"
+          element={
+            <LazyPage>
+              <PublicLegalDoc docType="privacy" />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/offer"
+          element={
+            <LazyPage>
+              <PublicLegalDoc docType="offer" />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/recurrent-payments"
+          element={
+            <LazyPage>
+              <PublicLegalDoc docType="recurrent" />
+            </LazyPage>
           }
         />
 
