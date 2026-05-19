@@ -442,6 +442,8 @@ export interface PaymentMethod {
   max_amount_kopeks: number;
   is_available: boolean;
   options?: PaymentMethodOption[] | null;
+  open_url_direct?: boolean;
+  requires_recurring_consent?: boolean;
 }
 
 // Referral types
