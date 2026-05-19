@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import DOMPurify from 'dompurify';
@@ -96,7 +96,6 @@ const formatContent = (content: string): string => {
 
 function PublicLegalDocInternal({ docType }: { docType: DocType }) {
   const meta = DOC_META[docType];
-  const [updatedAtFormatted, setUpdatedAtFormatted] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [meta.queryKey],
@@ -105,74 +104,51 @@ function PublicLegalDocInternal({ docType }: { docType: DocType }) {
   });
 
   useEffect(() => {
-    if (data?.updated_at) {
-      setUpdatedAtFormatted(new Date(data.updated_at).toLocaleDateString('ru-RU'));
-    }
-  }, [data]);
-
-  useEffect(() => {
     document.title = `${meta.title} — Matrixxx VPN`;
   }, [meta.title]);
 
+  const updatedAt = data?.updated_at ? new Date(data.updated_at).toLocaleDateString('ru-RU') : null;
+  const html = data?.content ? formatContent(data.content) : '';
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] px-4 py-8 text-white sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-dark-950 px-4 py-8 text-dark-100 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
         <Link
           to="/"
-          className="inline-flex items-center text-sm text-green-400 transition hover:text-green-300"
+          className="inline-flex items-center text-sm font-medium text-accent-400 transition-colors hover:text-accent-300"
         >
           ← Matrixxx VPN
         </Link>
 
-        <h1 className="mt-6 text-3xl font-bold text-white">{meta.title}</h1>
+        <h1 className="mt-6 flex items-center gap-2 text-3xl font-bold text-white">{meta.title}</h1>
 
-        {updatedAtFormatted && (
-          <p className="mt-2 text-sm text-gray-400">Обновлено: {updatedAtFormatted}</p>
-        )}
+        {updatedAt && <p className="mt-2 text-sm text-dark-400">Обновлено: {updatedAt}</p>}
 
-        <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
-          {isLoading && <p className="text-gray-400">Загрузка...</p>}
-          {isError && <p className="text-red-400">Не удалось загрузить документ.</p>}
-          {data?.content && (
-            <div
-              className="legal-doc-content prose prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: formatContent(data.content) }}
-            />
+        <div className="mt-8">
+          {isLoading && (
+            <div className="bento-card flex justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            </div>
+          )}
+          {isError && (
+            <div className="bento-card text-center text-red-400">
+              Не удалось загрузить документ.
+            </div>
+          )}
+          {html && (
+            <div className="bento-card prose prose-invert max-w-none">
+              <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: html }} />
+            </div>
           )}
         </div>
 
-        <div className="mt-8 text-center text-xs text-gray-500">
+        <div className="mt-12 text-center text-xs text-dark-500">
           <p>
             Smedia Pro LTD · Reg. No. 15645745
             <br />7 Bell Yard, London, UK, WC2A 2JR
           </p>
         </div>
       </div>
-
-      <style>{`
-        .legal-doc-content h1, .legal-doc-content h2, .legal-doc-content h3, .legal-doc-content h4 {
-          color: #fff;
-          font-weight: 600;
-          margin-top: 1.5rem;
-          margin-bottom: 0.75rem;
-        }
-        .legal-doc-content h1 { font-size: 1.5rem; }
-        .legal-doc-content h2 { font-size: 1.25rem; }
-        .legal-doc-content h3 { font-size: 1.1rem; }
-        .legal-doc-content p { color: #d1d5db; line-height: 1.7; margin-bottom: 1rem; }
-        .legal-doc-content ul, .legal-doc-content ol { color: #d1d5db; padding-left: 1.5rem; margin-bottom: 1rem; }
-        .legal-doc-content li { margin-bottom: 0.5rem; line-height: 1.6; }
-        .legal-doc-content b, .legal-doc-content strong { color: #fff; font-weight: 600; }
-        .legal-doc-content code {
-          background: rgba(255,255,255,0.1);
-          padding: 0.125rem 0.375rem;
-          border-radius: 0.25rem;
-          font-size: 0.875rem;
-          color: #10b981;
-        }
-        .legal-doc-content a { color: #34d399; text-decoration: underline; }
-        .legal-doc-content a:hover { color: #6ee7b7; }
-      `}</style>
     </div>
   );
 }

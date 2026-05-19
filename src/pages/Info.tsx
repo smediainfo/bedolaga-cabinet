@@ -69,7 +69,7 @@ const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   </svg>
 );
 
-const BUILTIN_TABS = new Set<string>(['faq', 'rules', 'privacy', 'offer', 'loyalty']);
+const BUILTIN_TABS = new Set<string>(['faq', 'rules', 'privacy', 'offer', 'recurrent', 'loyalty']);
 
 // Sanitize HTML content to prevent XSS
 const sanitizeHtml = (html: string): string => {
@@ -473,6 +473,14 @@ export default function Info() {
     refetchOnMount: 'always',
   });
 
+  const { data: recurrent, isLoading: recurrentLoading } = useQuery({
+    queryKey: ['recurrent-payments'],
+    queryFn: infoApi.getRecurrentPaymentsAgreement,
+    enabled: activeTab === 'recurrent' && !currentTabSlug && replacementsLoaded,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
   const { data: loyaltyData, isLoading: loyaltyLoading } = useQuery({
     queryKey: ['loyalty-tiers'],
     queryFn: promoApi.getLoyaltyTiers,
@@ -486,6 +494,7 @@ export default function Info() {
     { id: 'rules', label: t('info.rules'), icon: DocumentIcon },
     { id: 'privacy', label: t('info.privacy'), icon: ShieldIcon },
     { id: 'offer', label: t('info.offer'), icon: DocumentIcon },
+    { id: 'recurrent', label: t('info.recurrent', 'Рекурренты'), icon: DocumentIcon },
     { id: 'loyalty', label: t('info.loyalty'), icon: StarIcon },
   ];
 
@@ -636,6 +645,32 @@ export default function Info() {
           {privacy.updated_at && (
             <p className="mt-6 border-t border-dark-700 pt-4 text-sm text-dark-400">
               {t('info.updatedAt')}: {new Date(privacy.updated_at).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    if (activeTab === 'recurrent') {
+      if (recurrentLoading) {
+        return (
+          <div className="flex justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          </div>
+        );
+      }
+
+      if (!recurrent?.content) {
+        return <div className="py-8 text-center text-dark-400">{t('info.noContent')}</div>;
+      }
+
+      const recurrentHtml = formatContent(recurrent.content);
+      return (
+        <div className="bento-card prose prose-invert max-w-none">
+          <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: recurrentHtml }} />
+          {recurrent.updated_at && (
+            <p className="mt-6 border-t border-dark-700 pt-4 text-sm text-dark-400">
+              {t('info.updatedAt')}: {new Date(recurrent.updated_at).toLocaleDateString()}
             </p>
           )}
         </div>
