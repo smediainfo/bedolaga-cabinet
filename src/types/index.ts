@@ -448,9 +448,8 @@ export interface PaymentMethod {
   max_amount_kopeks: number;
   is_available: boolean;
   options?: PaymentMethodOption[] | null;
-  // Если true — после получения payment_url кабинет сразу делает
-  // window.location.href вместо показа панели с кнопкой "Открыть".
   open_url_direct?: boolean;
+  requires_recurring_consent?: boolean;
 }
 
 // Referral types

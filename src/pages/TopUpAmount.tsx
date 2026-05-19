@@ -179,6 +179,7 @@ export default function TopUpAmount() {
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
 
   // If method not found in cache, redirect to method selection
   useEffect(() => {
@@ -346,6 +347,10 @@ export default function TopUpAmount() {
       setError(t('balance.errors.selectMethod'));
       return;
     }
+    if (method.requires_recurring_consent && !consentAccepted) {
+      setError(t('balance.errors.consentRequired', 'Подтвердите согласие на рекуррентные платежи'));
+      return;
+    }
     const amountCurrency = parseFloat(amount);
     if (isNaN(amountCurrency) || amountCurrency <= 0) {
       setError(t('balance.errors.enterAmount'));
@@ -387,6 +392,9 @@ export default function TopUpAmount() {
       ? Math.round(convertAmount(rub)).toString()
       : convertAmount(rub).toFixed(currencyDecimals);
   const isPending = topUpMutation.isPending || starsPaymentMutation.isPending;
+  const needsConsent = Boolean(method.requires_recurring_consent);
+  const isPayBlocked =
+    isPending || !amount || parseFloat(amount) <= 0 || (needsConsent && !consentAccepted);
 
   const handleOpenPayment = () => {
     if (!paymentUrl) return;
@@ -499,9 +507,9 @@ export default function TopUpAmount() {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isPending || !amount || parseFloat(amount) <= 0}
+            disabled={isPayBlocked}
             className={`flex h-14 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-2xl px-6 text-base font-bold transition-colors duration-200 ${
-              isPending || !amount || parseFloat(amount) <= 0
+              isPayBlocked
                 ? 'cursor-not-allowed bg-dark-700 text-dark-500'
                 : isStarsMethod
                   ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg shadow-yellow-500/25 hover:from-yellow-400 hover:to-orange-400 active:from-yellow-600 active:to-orange-600'
@@ -519,6 +527,51 @@ export default function TopUpAmount() {
           </button>
         </div>
       </motion.div>
+
+      {/* Recurring payments consent */}
+      {needsConsent && (
+        <motion.label
+          variants={staggerItem}
+          className="flex cursor-pointer items-start gap-3 rounded-2xl border border-dark-700 bg-dark-900/50 p-4 transition-colors hover:bg-dark-900"
+        >
+          <input
+            type="checkbox"
+            checked={consentAccepted}
+            onChange={(e) => setConsentAccepted(e.target.checked)}
+            className="mt-0.5 h-5 w-5 cursor-pointer rounded border-dark-600 bg-dark-800 text-accent-500 focus:ring-2 focus:ring-accent-500"
+          />
+          <span className="text-sm leading-relaxed text-dark-200">
+            {t('balance.recurringConsent', 'Я согласен с')}{' '}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-400 underline hover:text-accent-300"
+            >
+              {t('balance.consentPrivacy', 'политикой обработки данных')}
+            </a>
+            ,{' '}
+            <a
+              href="/offer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-400 underline hover:text-accent-300"
+            >
+              {t('balance.consentOffer', 'договором оферты')}
+            </a>{' '}
+            {t('balance.consentAnd', 'и')}{' '}
+            <a
+              href="/recurrent-payments"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-400 underline hover:text-accent-300"
+            >
+              {t('balance.consentRecurrent', 'соглашением о рекуррентных платежах')}
+            </a>
+            .
+          </span>
+        </motion.label>
+      )}
 
       {/* Quick amount buttons */}
       {quickAmounts.length > 0 && (
