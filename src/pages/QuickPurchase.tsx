@@ -593,8 +593,9 @@ function SummaryCard({
         )}
       </AnimatePresence>
 
-      {/* Recurring payments consent */}
-      {needsConsent && (
+      {/* Recurring payments consent — only here when NOT in sticky-mobile mode
+          (in sticky-mobile mode it's rendered INSIDE the portal next to the button so it stays visible). */}
+      {needsConsent && !(stickyPayButton && isMobile) && (
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-dark-700 bg-dark-900/40 p-3 transition-colors hover:bg-dark-900">
           <input
             type="checkbox"
@@ -639,12 +640,52 @@ function SummaryCard({
       {stickyPayButton && isMobile ? (
         createPortal(
           <div
-            className="fixed bottom-0 left-0 right-0 z-50 p-3"
+            className="fixed bottom-0 left-0 right-0 z-50 space-y-2 p-3"
             style={{
               background:
-                'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, transparent 100%)',
+                'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.75) 70%, transparent 100%)',
             }}
           >
+            {needsConsent && (
+              <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-dark-700 bg-dark-900/80 p-2.5 backdrop-blur">
+                <input
+                  type="checkbox"
+                  checked={consentAccepted}
+                  onChange={(e) => onConsentChange?.(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-dark-600 bg-dark-800 text-accent-500 focus:ring-2 focus:ring-accent-500"
+                />
+                <span className="text-[11px] leading-snug text-dark-200">
+                  Я согласен с{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent-400 underline hover:text-accent-300"
+                  >
+                    политикой
+                  </a>
+                  ,{' '}
+                  <a
+                    href="/offer"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent-400 underline hover:text-accent-300"
+                  >
+                    офертой
+                  </a>{' '}
+                  и{' '}
+                  <a
+                    href="/recurrent-payments"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent-400 underline hover:text-accent-300"
+                  >
+                    рекуррентами
+                  </a>
+                  .
+                </span>
+              </label>
+            )}
             <button
               type="button"
               onClick={() => {
