@@ -15,6 +15,7 @@ export interface LandingTariffPeriod {
   original_price_kopeks: number | null;
   original_price_label: string | null;
   discount_percent: number | null;
+  is_trial?: boolean;
 }
 
 export interface LandingTariff {
