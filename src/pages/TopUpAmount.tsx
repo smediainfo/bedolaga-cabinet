@@ -88,15 +88,14 @@ export default function TopUpAmount() {
     ? parseFloat(searchParams.get('amount')!)
     : undefined;
 
-  // Fetch payment methods with a real query (dedupes with the method-selection page and
-  // Balance via the shared ['payment-methods'] key). A non-reactive getQueryData read used
-  // to dead-end on an infinite spinner whenever the cache was cold — reload, browser-back
-  // from the provider page, or a deep link straight to this route.
-  const { data: methods, isLoading: isMethodsLoading } = useQuery({
+  // Fetch payment methods (uses the same query key as TopUpMethodSelect, so
+  // cache is reused when navigating from there; falls back to a network
+  // request on direct hits / hard refresh).
+  const { data: cachedMethods, isLoading: isMethodsLoading } = useQuery<PaymentMethod[]>({
     queryKey: ['payment-methods'],
     queryFn: balanceApi.getPaymentMethods,
   });
-  const method = methods?.find((m) => m.id === methodId);
+  const method = cachedMethods?.find((m) => m.id === methodId);
 
   const handleNavigateBack = useCallback(() => {
     navigate(-1);
@@ -149,9 +148,13 @@ export default function TopUpAmount() {
   // as soon as the user edits the field by hand.
   const [quickRub, setQuickRub] = useState<number | null>(null);
 
-  // Once methods have loaded, redirect to method selection if this method id is unknown.
+  // Once payment methods are loaded, redirect to method selection if the
+  // requested methodId doesn't exist (e.g. stale link, removed method).
+  // Wait for the query to finish — on direct hit / hard refresh the cache
+  // is empty until the network request returns.
   useEffect(() => {
-    if (methods && !method) {
+    if (isMethodsLoading) return;
+    if (cachedMethods && !method) {
       const params = new URLSearchParams();
       const amount = searchParams.get('amount');
       const rt = searchParams.get('returnTo');
@@ -160,7 +163,7 @@ export default function TopUpAmount() {
       const qs = params.toString();
       navigate(`/balance/top-up${qs ? `?${qs}` : ''}`, { replace: true });
     }
-  }, [methods, method, navigate, searchParams]);
+  }, [cachedMethods, method, isMethodsLoading, navigate, searchParams]);
 
   useEffect(() => {
     if (!method?.options || method.options.length === 0) {
