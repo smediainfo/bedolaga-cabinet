@@ -110,23 +110,12 @@ function PeriodTabs({
             type="button"
             onClick={() => onSelect(period.days)}
             className={cn(
-              'relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
+              'whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
               isSelected
                 ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/25'
                 : 'bg-dark-800/50 text-dark-300 hover:bg-dark-700/50 hover:text-dark-100',
-              isTrial && !isSelected && 'ring-1 ring-amber-500/40',
             )}
           >
-            {isTrial && (
-              <span
-                className={cn(
-                  'mr-1.5 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase',
-                  isSelected ? 'bg-white/20 text-white' : 'bg-amber-500/20 text-amber-300',
-                )}
-              >
-                Триал
-              </span>
-            )}
             {isTrial ? period.label : formatPeriodLabel(period.days, t)}
           </button>
         );
