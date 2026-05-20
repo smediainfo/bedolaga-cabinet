@@ -480,6 +480,9 @@ function SummaryCard({
   stickyPayButton = false,
   submitError,
   onSubmit,
+  needsConsent = false,
+  consentAccepted = false,
+  onConsentChange,
 }: {
   config: LandingConfig;
   selectedTariff: LandingTariff | undefined;
@@ -490,6 +493,9 @@ function SummaryCard({
   stickyPayButton?: boolean;
   submitError: string | null;
   onSubmit: () => void;
+  needsConsent?: boolean;
+  consentAccepted?: boolean;
+  onConsentChange?: (v: boolean) => void;
 }) {
   const { t } = useTranslation();
 
@@ -521,9 +527,7 @@ function SummaryCard({
               {t('landing.period', 'Period')}
             </p>
             <p className="mt-1 text-sm text-dark-200">
-              {selectedPeriod.is_trial
-                ? selectedPeriod.label
-                : formatPeriodLabel(selectedPeriod.days, t)}
+              {formatPeriodLabel(selectedPeriod.days, t)}
             </p>
           </div>
         )}
@@ -588,6 +592,48 @@ function SummaryCard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Recurring payments consent */}
+      {needsConsent && (
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-dark-700 bg-dark-900/40 p-3 transition-colors hover:bg-dark-900">
+          <input
+            type="checkbox"
+            checked={consentAccepted}
+            onChange={(e) => onConsentChange?.(e.target.checked)}
+            className="mt-0.5 h-5 w-5 cursor-pointer rounded border-dark-600 bg-dark-800 text-accent-500 focus:ring-2 focus:ring-accent-500"
+          />
+          <span className="text-xs leading-relaxed text-dark-300">
+            Я согласен с{' '}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-400 underline hover:text-accent-300"
+            >
+              политикой обработки данных
+            </a>
+            ,{' '}
+            <a
+              href="/offer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-400 underline hover:text-accent-300"
+            >
+              договором оферты
+            </a>{' '}
+            и{' '}
+            <a
+              href="/recurrent-payments"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-400 underline hover:text-accent-300"
+            >
+              соглашением о рекуррентных платежах
+            </a>
+            .
+          </span>
+        </label>
+      )}
 
       {/* Pay button */}
       {stickyPayButton && isMobile ? (
@@ -1270,47 +1316,6 @@ export default function QuickPurchase() {
                     />
                   ))}
                 </div>
-
-                {needsConsent && (
-                  <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-2xl border border-dark-700 bg-dark-900/50 p-4 transition-colors hover:bg-dark-900">
-                    <input
-                      type="checkbox"
-                      checked={consentAccepted}
-                      onChange={(e) => setConsentAccepted(e.target.checked)}
-                      className="mt-0.5 h-5 w-5 cursor-pointer rounded border-dark-600 bg-dark-800 text-accent-500 focus:ring-2 focus:ring-accent-500"
-                    />
-                    <span className="text-sm leading-relaxed text-dark-200">
-                      {t('landing.recurringConsent', 'Я согласен с')}{' '}
-                      <a
-                        href="/privacy"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent-400 underline hover:text-accent-300"
-                      >
-                        {t('landing.consentPrivacy', 'политикой обработки данных')}
-                      </a>
-                      ,{' '}
-                      <a
-                        href="/offer"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent-400 underline hover:text-accent-300"
-                      >
-                        {t('landing.consentOffer', 'договором оферты')}
-                      </a>{' '}
-                      {t('landing.consentAnd', 'и')}{' '}
-                      <a
-                        href="/recurrent-payments"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent-400 underline hover:text-accent-300"
-                      >
-                        {t('landing.consentRecurrent', 'соглашением о рекуррентных платежах')}
-                      </a>
-                      .
-                    </span>
-                  </label>
-                )}
               </div>
             )}
           </motion.div>
@@ -1335,6 +1340,9 @@ export default function QuickPurchase() {
               submitError={submitError}
               onSubmit={handleSubmit}
               stickyPayButton={config?.sticky_pay_button}
+              needsConsent={needsConsent}
+              consentAccepted={consentAccepted}
+              onConsentChange={setConsentAccepted}
             />
           </motion.div>
         </div>
