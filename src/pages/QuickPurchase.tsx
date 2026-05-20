@@ -521,7 +521,9 @@ function SummaryCard({
               {t('landing.period', 'Period')}
             </p>
             <p className="mt-1 text-sm text-dark-200">
-              {formatPeriodLabel(selectedPeriod.days, t)}
+              {selectedPeriod.is_trial
+                ? selectedPeriod.label
+                : formatPeriodLabel(selectedPeriod.days, t)}
             </p>
           </div>
         )}
