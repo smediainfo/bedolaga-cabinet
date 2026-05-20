@@ -5,6 +5,7 @@ export interface PeriodPrice {
   days: number;
   price_kopeks: number;
   price_rubles?: number;
+  is_trial?: boolean;
 }
 
 export interface ServerTrafficLimit {
