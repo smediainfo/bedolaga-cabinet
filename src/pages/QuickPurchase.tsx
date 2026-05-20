@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { fireAnalyticsEvent, getYandexCid } from '../hooks/useAnalyticsCounters';
 import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
@@ -467,6 +467,67 @@ function SummaryCard({
 }) {
   const { t } = useTranslation();
 
+  // Shared consent label — single source of truth (i18n + link components).
+  // Pass variant to control sizing (full inside SummaryCard vs compact inside sticky portal).
+  const renderConsent = (variant: 'full' | 'compact') => {
+    if (!needsConsent) return null;
+    const isCompact = variant === 'compact';
+    return (
+      <label
+        className={cn(
+          'flex cursor-pointer items-start gap-3 border border-dark-700 bg-dark-900/40 transition-colors hover:bg-dark-900',
+          isCompact ? 'gap-2 rounded-xl bg-dark-900/80 p-2.5 backdrop-blur' : 'rounded-2xl p-3',
+        )}
+      >
+        <input
+          type="checkbox"
+          checked={consentAccepted}
+          onChange={(e) => onConsentChange?.(e.target.checked)}
+          className={cn(
+            'mt-0.5 shrink-0 cursor-pointer rounded border-dark-600 bg-dark-800 text-accent-500 focus:ring-2 focus:ring-accent-500',
+            isCompact ? 'h-4 w-4' : 'h-5 w-5',
+          )}
+        />
+        <span
+          className={cn(
+            'leading-relaxed text-dark-300',
+            isCompact ? 'text-[11px] leading-snug text-dark-200' : 'text-xs',
+          )}
+        >
+          <Trans
+            i18nKey="landing.consent"
+            components={{
+              privacy: (
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent-400 underline hover:text-accent-300"
+                />
+              ),
+              offer: (
+                <a
+                  href="/offer"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent-400 underline hover:text-accent-300"
+                />
+              ),
+              recurrent: (
+                <a
+                  href="/recurrent-payments"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent-400 underline hover:text-accent-300"
+                />
+              ),
+            }}
+          />
+        </span>
+      </label>
+    );
+  };
+
   // Responsive: track mobile for sticky pay button
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== 'undefined' && window.innerWidth < 1024,
@@ -553,6 +614,10 @@ function SummaryCard({
         )}
       </AnimatePresence>
 
+      {/* Recurring payments consent — only here when NOT in sticky-mobile mode
+          (in sticky-mobile mode it's rendered INSIDE the portal next to the button so it stays visible). */}
+      {!(stickyPayButton && isMobile) && renderConsent('full')}
+
       {/* Pay button */}
       {stickyPayButton && isMobile ? (
         createPortal(
@@ -563,6 +628,7 @@ function SummaryCard({
                 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, transparent 100%)',
             }}
           >
+            {renderConsent('compact')}
             <button
               type="button"
               onClick={() => {
