@@ -661,7 +661,7 @@ function SummaryCard({
                     rel="noopener noreferrer"
                     className="text-accent-400 underline hover:text-accent-300"
                   >
-                    политикой
+                    политикой обработки данных
                   </a>
                   ,{' '}
                   <a
@@ -670,7 +670,7 @@ function SummaryCard({
                     rel="noopener noreferrer"
                     className="text-accent-400 underline hover:text-accent-300"
                   >
-                    офертой
+                    договором оферты
                   </a>{' '}
                   и{' '}
                   <a
@@ -679,7 +679,7 @@ function SummaryCard({
                     rel="noopener noreferrer"
                     className="text-accent-400 underline hover:text-accent-300"
                   >
-                    рекуррентами
+                    соглашением о рекуррентных платежах
                   </a>
                   .
                 </span>
