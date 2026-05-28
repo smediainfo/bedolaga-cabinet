@@ -91,7 +91,11 @@ export default function TopUpAmount() {
   // Fetch payment methods (uses the same query key as TopUpMethodSelect, so
   // cache is reused when navigating from there; falls back to a network
   // request on direct hits / hard refresh).
-  const { data: cachedMethods, isLoading: isMethodsLoading } = useQuery<PaymentMethod[]>({
+  const {
+    data: cachedMethods,
+    isLoading: isMethodsLoading,
+    isError: isMethodsError,
+  } = useQuery<PaymentMethod[]>({
     queryKey: ['payment-methods'],
     queryFn: balanceApi.getPaymentMethods,
   });
@@ -142,11 +146,7 @@ export default function TopUpAmount() {
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  // Canonical RUB amount when the user picked a quick-amount chip. The input shows a
-  // rounded display-currency value; validating/charging the canonical RUB avoids the FX
-  // round-trip that could push a min-amount chip just below the allowed minimum. Cleared
-  // as soon as the user edits the field by hand.
-  const [quickRub, setQuickRub] = useState<number | null>(null);
+  const [consentAccepted, setConsentAccepted] = useState(true);
 
   // Once payment methods are loaded, redirect to method selection if the
   // requested methodId doesn't exist (e.g. stale link, removed method).
@@ -154,7 +154,10 @@ export default function TopUpAmount() {
   // is empty until the network request returns.
   useEffect(() => {
     if (isMethodsLoading) return;
-    if (cachedMethods && !method) {
+    // Redirect back to the method selector if methods loaded but this method
+    // is missing, OR if the fetch failed — otherwise the `if (!method)` spinner
+    // below renders forever on the error path (direct hit / hard refresh).
+    if (isMethodsError || (cachedMethods && !method)) {
       const params = new URLSearchParams();
       const amount = searchParams.get('amount');
       const rt = searchParams.get('returnTo');
@@ -163,7 +166,7 @@ export default function TopUpAmount() {
       const qs = params.toString();
       navigate(`/balance/top-up${qs ? `?${qs}` : ''}`, { replace: true });
     }
-  }, [cachedMethods, method, isMethodsLoading, navigate, searchParams]);
+  }, [cachedMethods, method, isMethodsLoading, isMethodsError, navigate, searchParams]);
 
   useEffect(() => {
     if (!method?.options || method.options.length === 0) {

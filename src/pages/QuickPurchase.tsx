@@ -30,8 +30,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { cn } from '../lib/utils';
 import { getApiErrorMessage } from '../utils/api-error';
 import { formatPrice } from '../utils/format';
-import { setFavicon, letterFaviconDataUri, roundedFaviconDataUri } from '../utils/favicon';
-import { useCurrency } from '../hooks/useCurrency';
+import { getPendingReferralCode } from '../utils/referral';
 
 function detectContactType(value: string): 'email' | 'telegram' {
   return value.startsWith('@') ? 'telegram' : 'email';
@@ -318,13 +317,13 @@ function TariffCard({
         <div className="mt-3 border-t border-dark-800/30 pt-3">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-accent-400">
-              {formatPrice(selectedPeriod.price_kopeks)}
+              {formatPrice(selectedPeriod.price_kopeks, 'ru')}
             </span>
             {selectedPeriod.original_price_kopeks != null &&
               selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
                 <>
                   <span className="text-sm text-dark-500 line-through">
-                    {formatPrice(selectedPeriod.original_price_kopeks)}
+                    {formatPrice(selectedPeriod.original_price_kopeks, 'ru')}
                   </span>
                   {selectedPeriod.discount_percent != null && (
                     <span className="rounded-full bg-accent-500/20 px-1.5 py-0.5 text-[10px] font-bold text-accent-400">
@@ -480,6 +479,7 @@ function SummaryCard({
         )}
       >
         <input
+          id="consent-checkbox"
           type="checkbox"
           checked={consentAccepted}
           onChange={(e) => onConsentChange?.(e.target.checked)}
@@ -488,41 +488,8 @@ function SummaryCard({
             isCompact ? 'h-4 w-4' : 'h-5 w-5',
           )}
         />
-        <span
-          className={cn(
-            'leading-relaxed text-dark-300',
-            isCompact ? 'text-[11px] leading-snug text-dark-200' : 'text-xs',
-          )}
-        >
-          <Trans
-            i18nKey="landing.consent"
-            components={{
-              privacy: (
-                <a
-                  href="/privacy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent-400 underline hover:text-accent-300"
-                />
-              ),
-              offer: (
-                <a
-                  href="/offer"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent-400 underline hover:text-accent-300"
-                />
-              ),
-              recurrent: (
-                <a
-                  href="/recurrent-payments"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent-400 underline hover:text-accent-300"
-                />
-              ),
-            }}
-          />
+        <span className="min-w-0 flex-1">
+          <Trans i18nKey="landing.consent" components={consentComponents} />
         </span>
       </label>
     );
@@ -565,12 +532,12 @@ function SummaryCard({
             {t('landing.total', 'Total')}
           </p>
           <div className="mt-1 flex items-center gap-2">
-            <span className="text-2xl font-bold text-accent-400">{formatPrice(currentPrice)}</span>
+            <span className="text-2xl font-bold text-accent-400">{formatPrice(currentPrice, 'ru')}</span>
             {selectedPeriod?.original_price_kopeks != null &&
               selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
                 <>
                   <span className="text-base text-dark-500 line-through">
-                    {formatPrice(selectedPeriod.original_price_kopeks)}
+                    {formatPrice(selectedPeriod.original_price_kopeks, 'ru')}
                   </span>
                   {selectedPeriod.discount_percent != null && (
                     <span className="rounded-full bg-accent-500/20 px-2 py-0.5 text-xs font-bold text-accent-400">
@@ -633,7 +600,8 @@ function SummaryCard({
               type="button"
               onClick={() => {
                 if (!canSubmit || isSubmitting) {
-                  const el = document.getElementById('contact-input');
+                  const targetId = needsConsent && !consentAccepted ? 'consent-checkbox' : 'contact-input';
+                  const el = document.getElementById(targetId);
                   if (el) {
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     el.classList.add('!border-error-500', '!ring-2', '!ring-error-500/50');
@@ -661,10 +629,10 @@ function SummaryCard({
                   {selectedPeriod?.original_price_kopeks != null &&
                     selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
                       <span className="mr-1 text-sm font-normal text-white/50 line-through">
-                        {formatPrice(selectedPeriod.original_price_kopeks)}
+                        {formatPrice(selectedPeriod.original_price_kopeks, 'ru')}
                       </span>
                     )}
-                  {formatPrice(currentPrice)}
+                  {formatPrice(currentPrice, 'ru')}
                 </>
               )}
             </button>
@@ -676,7 +644,8 @@ function SummaryCard({
           type="button"
           onClick={() => {
             if (!canSubmit || isSubmitting) {
-              const el = document.getElementById('contact-input');
+              const targetId = needsConsent && !consentAccepted ? 'consent-checkbox' : 'contact-input';
+              const el = document.getElementById(targetId);
               if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 el.classList.add('!border-error-500', '!ring-2', '!ring-error-500/50');
@@ -707,10 +676,10 @@ function SummaryCard({
               {selectedPeriod?.original_price_kopeks != null &&
                 selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
                   <span className="mr-1 text-sm font-normal text-white/50 line-through">
-                    {formatPrice(selectedPeriod.original_price_kopeks)}
+                    {formatPrice(selectedPeriod.original_price_kopeks, 'ru')}
                   </span>
                 )}
-              {formatPrice(currentPrice)}
+              {formatPrice(currentPrice, 'ru')}
             </>
           )}
         </button>
@@ -832,10 +801,6 @@ export default function QuickPurchase() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
 
-  // Подгружаем курсы валют, чтобы formatPrice конвертировал суммы для не-RU локалей
-  // (хук кладёт rates в глобальный кэш utils/format.ts).
-  useCurrency();
-
   // Fetch config
   const {
     data: config,
@@ -904,7 +869,12 @@ export default function QuickPurchase() {
     if (document.referrer && !sessionStorage.getItem('landing_referrer')) {
       sessionStorage.setItem('landing_referrer', document.referrer.slice(0, 500));
     }
-    // Save subid from URL (also clamped to backend limit of 255)
+    // Save referral code. auth.ts bootstrap strips ?ref= from the URL into
+    // localStorage before this mount runs, so fall back to the captured code.
+    const urlRef = new URLSearchParams(window.location.search).get("ref") || getPendingReferralCode();
+    if (urlRef) {
+      sessionStorage.setItem("landing_ref", urlRef.slice(0, 64));
+    }
     const urlSubid = new URLSearchParams(window.location.search).get('subid');
     if (urlSubid) {
       sessionStorage.setItem('landing_subid', urlSubid.slice(0, 255));
@@ -948,6 +918,7 @@ export default function QuickPurchase() {
   const [selectedSubOption, setSelectedSubOption] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [consentAccepted, setConsentAccepted] = useState(true);
   const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Cleanup redirect timeout on unmount
@@ -1150,6 +1121,8 @@ export default function QuickPurchase() {
     if (ymCid) data.yandex_cid = ymCid;
     const subid = sessionStorage.getItem('landing_subid');
     if (subid) (data as unknown as Record<string, unknown>).subid = subid;
+    const refCode = sessionStorage.getItem('landing_ref');
+    if (refCode) (data as unknown as Record<string, unknown>).referrer_code = refCode;
 
     // Fire landing-specific click goal
     if (config?.analytics_click_enabled && config?.analytics_click_goal) {
