@@ -8,6 +8,7 @@ import { authApi } from '../api/auth';
 import { useAuthStore } from '../store/auth';
 import { useNavigate } from 'react-router';
 import { getPendingCampaignSlug } from '../utils/campaign';
+import { getPendingReferralCode } from '../utils/referral';
 import { copyToClipboard } from '../utils/clipboard';
 
 interface TelegramLoginButtonProps {
@@ -42,6 +43,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
 
   // Capture campaign slug once on mount (before any retry clears it)
   const capturedCampaignRef = useRef<string | null>(null);
+  const capturedReferralRef = useRef<string | null>(null);
   const codesConsumedRef = useRef(false);
 
   const { data: widgetConfig } = useQuery<TelegramWidgetConfig>({
@@ -254,11 +256,12 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
       // other auth methods (OIDC, widget) to pick it up if the user switches paths.
       if (!codesConsumedRef.current) {
         capturedCampaignRef.current = getPendingCampaignSlug();
+        capturedReferralRef.current = getPendingReferralCode();
         codesConsumedRef.current = true;
       }
       const capturedCampaign = capturedCampaignRef.current;
 
-      const response = await authApi.requestDeepLinkToken();
+      const response = await authApi.requestDeepLinkToken(capturedReferralRef.current);
       const { token, bot_username, expires_in } = response;
       setDeepLinkToken(token);
       setDeepLinkBotUsername(bot_username || botUsername);
