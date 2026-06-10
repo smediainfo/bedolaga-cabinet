@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { brandingApi } from '../api/branding';
-import { setYandexCid } from '../utils/yandexCid';
+import { setYandexCid, captureYclidFromUrl } from '../utils/yandexCid';
 import { tokenStorage } from '../utils/token';
 import {
   capturePartnerClickIdFromUrl,
@@ -82,6 +82,17 @@ function _capturePartnerClickIdOnce() {
   }
 }
 _capturePartnerClickIdOnce();
+
+// Capture yandex Direct click id (yclid) from URL ASAP so it survives the
+// user's navigation to the purchase flow.
+function _captureYclidOnce() {
+  try {
+    captureYclidFromUrl();
+  } catch {
+    /* ignore */
+  }
+}
+_captureYclidOnce();
 
 async function _syncPartnerClickIdIfAuthenticated() {
   try {

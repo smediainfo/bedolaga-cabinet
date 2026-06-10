@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation, Trans } from 'react-i18next';
 import { fireAnalyticsEvent, getYandexCid } from '../hooks/useAnalyticsCounters';
+import { getYclid } from '../utils/yandexCid';
 import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
 import { landingApi } from '../api/landings';
@@ -1152,6 +1153,8 @@ export default function QuickPurchase() {
     // Get Yandex CID for offline conversions (sync from localStorage)
     const ymCid = getYandexCid();
     if (ymCid) data.yandex_cid = ymCid;
+    const yclid = getYclid();
+    if (yclid) data.yclid = yclid;
     const subid = sessionStorage.getItem('landing_subid');
     if (subid) (data as unknown as Record<string, unknown>).subid = subid;
     const refCode = sessionStorage.getItem('landing_ref');
