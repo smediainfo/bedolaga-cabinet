@@ -112,6 +112,7 @@ export interface PurchaseRequest {
   language?: string;
   // Yandex offline-conversions linkage (bot PR #2851 backend fields)
   yandex_cid?: string;
+  yclid?: string;
   referrer?: string;
   subid?: string;
 }
