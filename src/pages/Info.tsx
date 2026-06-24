@@ -437,6 +437,7 @@ export default function Info() {
       { id: 'rules', label: t('info.rules'), icon: DocumentIcon },
       { id: 'privacy', label: t('info.privacy'), icon: ShieldIcon },
       { id: 'offer', label: t('info.offer'), icon: DocumentIcon },
+      { id: 'recurrent', label: t('info.recurrent', 'Рекурренты'), icon: DocumentIcon },
       { id: 'loyalty', label: t('info.loyalty'), icon: StarIcon },
     ];
 
