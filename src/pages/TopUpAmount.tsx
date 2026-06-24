@@ -146,6 +146,11 @@ export default function TopUpAmount() {
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  // Canonical RUB amount when the user picked a quick-amount chip. The input shows a
+  // rounded display-currency value; validating/charging the canonical RUB avoids the FX
+  // round-trip that could push a min-amount chip just below the allowed minimum. Cleared
+  // as soon as the user edits the field by hand.
+  const [quickRub, setQuickRub] = useState<number | null>(null);
   const [consentAccepted, setConsentAccepted] = useState(true);
 
   // Once payment methods are loaded, redirect to method selection if the
