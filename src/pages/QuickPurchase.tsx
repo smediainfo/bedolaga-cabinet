@@ -32,6 +32,7 @@ import { cn } from '../lib/utils';
 import { getApiErrorMessage } from '../utils/api-error';
 import { formatPrice } from '../utils/format';
 import { getPendingReferralCode } from '../utils/referral';
+import { setFavicon, letterFaviconDataUri, roundedFaviconDataUri } from '../utils/favicon';
 
 function detectContactType(value: string): 'email' | 'telegram' {
   return value.startsWith('@') ? 'telegram' : 'email';
@@ -466,6 +467,19 @@ function SummaryCard({
   onSubmit: () => void;
 }) {
   const { t } = useTranslation();
+
+  // Stable Trans components — memoized so Trans doesn't re-walk the i18n tree on every render.
+  const consentComponents = useMemo(() => {
+    const linkClass = 'text-accent-400 underline hover:text-accent-300';
+    const link = (href: string) => (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={linkClass} />
+    );
+    return {
+      privacy: link('/privacy'),
+      offer: link('/offer'),
+      recurrent: link('/recurrent-payments'),
+    };
+  }, []);
 
   // Shared consent label — single source of truth (i18n + link components).
   // Pass variant to control sizing (full inside SummaryCard vs compact inside sticky portal).
@@ -1058,13 +1072,29 @@ export default function QuickPurchase() {
 
   const currentPrice = selectedPeriod?.price_kopeks ?? 0;
 
+  const selectedMethodConfig = useMemo(
+    () => config?.payment_methods?.find((m) => m.method_id === selectedMethod),
+    [config, selectedMethod],
+  );
+  const needsConsent = Boolean(selectedMethodConfig?.requires_recurring_consent);
+
   // Validation
   const canSubmit = useMemo(() => {
     if (!selectedTariffId || !selectedPeriodDays || !selectedMethod) return false;
     if (!isValidContact(contactValue)) return false;
     if (isGift && !isValidContact(giftRecipient)) return false;
+    if (needsConsent && !consentAccepted) return false;
     return true;
-  }, [selectedTariffId, selectedPeriodDays, selectedMethod, contactValue, isGift, giftRecipient]);
+  }, [
+    selectedTariffId,
+    selectedPeriodDays,
+    selectedMethod,
+    contactValue,
+    isGift,
+    giftRecipient,
+    needsConsent,
+    consentAccepted,
+  ]);
 
   // Purchase mutation
   const purchaseMutation = useMutation({
@@ -1330,6 +1360,9 @@ export default function QuickPurchase() {
               submitError={submitError}
               onSubmit={handleSubmit}
               stickyPayButton={config?.sticky_pay_button}
+              needsConsent={needsConsent}
+              consentAccepted={consentAccepted}
+              onConsentChange={setConsentAccepted}
             />
           </motion.div>
         </div>
