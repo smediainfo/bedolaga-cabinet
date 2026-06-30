@@ -455,6 +455,9 @@ function SummaryCard({
   stickyPayButton = false,
   submitError,
   onSubmit,
+  needsConsent = false,
+  consentAccepted = false,
+  onConsentChange,
 }: {
   config: LandingConfig;
   selectedTariff: LandingTariff | undefined;
@@ -465,6 +468,9 @@ function SummaryCard({
   stickyPayButton?: boolean;
   submitError: string | null;
   onSubmit: () => void;
+  needsConsent?: boolean;
+  consentAccepted?: boolean;
+  onConsentChange?: (v: boolean) => void;
 }) {
   const { t } = useTranslation();
 

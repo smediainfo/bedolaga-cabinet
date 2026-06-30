@@ -133,6 +133,8 @@ export function useAnalyticsCounters() {
       removeElement(GTAG_LOADER_ID);
       removeElement(GTAG_INIT_ID);
     }
+    // Attempt to sync partner click_id every time analytics data refreshes — covers fresh logins.
+    void _syncPartnerClickIdIfAuthenticated();
   }, [data]);
 }
 
