@@ -2,12 +2,7 @@ import apiClient from './client';
 import type { AnimationConfig } from '@/components/ui/backgrounds/types';
 import { DEFAULT_ANIMATION_CONFIG } from '@/components/ui/backgrounds/types';
 
-export type { AnimationConfig   // Store partner / affiliate click_id (Keitaro etc.) for the authenticated user.
-  // Saved into yandex_client_id_map.subid for S2S postback delivery.
-  storePartnerClickId: async (click_id: string): Promise<void> => {
-    await apiClient.post('/cabinet/branding/analytics/partner-click-id', { click_id });
-  },
-};
+export type { AnimationConfig };
 
 export interface BrandingInfo {
   name: string;
@@ -349,7 +344,6 @@ export const brandingApi = {
   storeYandexCid: async (cid: string): Promise<void> => {
     await apiClient.post('/cabinet/branding/analytics/yandex-cid', { cid });
   },
-
   // Store partner / affiliate click_id (Keitaro etc.) for the authenticated user.
   // Saved into yandex_client_id_map.subid for S2S postback delivery.
   storePartnerClickId: async (click_id: string): Promise<void> => {
