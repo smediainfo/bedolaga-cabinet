@@ -151,7 +151,6 @@ export default function TopUpAmount() {
   // round-trip that could push a min-amount chip just below the allowed minimum. Cleared
   // as soon as the user edits the field by hand.
   const [quickRub, setQuickRub] = useState<number | null>(null);
-  const [consentAccepted, setConsentAccepted] = useState(true);
 
   // Once payment methods are loaded, redirect to method selection if the
   // requested methodId doesn't exist (e.g. stale link, removed method).
