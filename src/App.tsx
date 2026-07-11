@@ -23,6 +23,7 @@ function lazyWithRetry<T extends ComponentType<unknown>>(factory: () => Promise<
 import { useBlockingStore } from './store/blocking';
 import Layout from './components/layout/Layout';
 import PageLoader from './components/common/PageLoader';
+import LegalDoc from './pages/LegalDoc';
 import {
   MaintenanceScreen,
   ChannelSubscriptionScreen,
@@ -266,6 +267,7 @@ function App() {
         <Route path="/auth/oauth/callback" element={<OAuthCallback />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/legal/:slug" element={<LegalDoc />} />
         <Route
           path="/merge/:mergeToken"
           element={

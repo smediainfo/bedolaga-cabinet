@@ -8,9 +8,9 @@ interface LegalLink {
 }
 
 const LINKS: LegalLink[] = [
-  { href: '/offer', labelKey: 'footer.offer', fallback: 'Публичная оферта' },
-  { href: '/privacy', labelKey: 'footer.privacy', fallback: 'Политика конфиденциальности' },
-  { href: '/recurrent-payments', labelKey: 'footer.recurrent', fallback: 'Рекуррентные платежи' },
+  { href: '/legal/offer', labelKey: 'footer.offer', fallback: 'Публичная оферта' },
+  { href: '/legal/privacy', labelKey: 'footer.privacy', fallback: 'Политика конфиденциальности' },
+  { href: '/legal/recurrent', labelKey: 'footer.recurrent', fallback: 'Рекуррентные платежи' },
 ];
 
 interface LegalFooterProps {
