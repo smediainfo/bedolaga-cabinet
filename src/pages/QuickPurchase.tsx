@@ -1293,7 +1293,7 @@ export default function QuickPurchase() {
                     <span className="text-sm leading-relaxed text-dark-200">
                       {t('landing.recurringConsent', 'Я согласен с')}{' '}
                       <a
-                        href="/privacy"
+                        href="/legal/privacy"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-accent-400 underline hover:text-accent-300"
@@ -1302,7 +1302,7 @@ export default function QuickPurchase() {
                       </a>
                       ,{' '}
                       <a
-                        href="/offer"
+                        href="/legal/offer"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-accent-400 underline hover:text-accent-300"
@@ -1311,7 +1311,7 @@ export default function QuickPurchase() {
                       </a>{' '}
                       {t('landing.consentAnd', 'и')}{' '}
                       <a
-                        href="/recurrent-payments"
+                        href="/legal/recurrent"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-accent-400 underline hover:text-accent-300"
